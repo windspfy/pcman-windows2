@@ -6,8 +6,11 @@
 *.log
 *.obj
 *.pdb
+*.recipe
 *.res
 *.sbr
 *.tlog
+*.vcxproj.FileListAbsolute.txt
 *.vcxproj.user
 .vs/
+vcpkg_installed/

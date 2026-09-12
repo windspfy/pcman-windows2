@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+  "name": "pcman-windows",
+  "version-string": "1.0.0",
+  "builtin-baseline": "ec12d917a85839741f8345905f71b3e7f56d9ddc",
+  "dependencies": [
+    {
+      "name": "cpprestsdk",
+      "default-features": true,
+      "features": [
+        "websockets"
+      ]
+    }
+  ]
+}

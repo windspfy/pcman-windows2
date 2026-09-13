@@ -1443,6 +1443,15 @@ inline void CTelnetConn::ProcessAnsiEscapeSequence()
 
 		char *param = ansi_param + 1;
 		BYTE type = *pansi_param;
+
+		// DEC private control sequences use '?' before their parameters. PCMan
+		// does not currently implement these modes, so consume the complete
+		// sequence without treating it as the corresponding standard CSI command.
+		// This also safely ignores synchronized output (CSI ? 2026 h/l) and
+		// XTerm mouse modes (CSI ? 1000 h through CSI ? 1006 l).
+		if (*param == '?')
+			return;
+
 		*pansi_param = ';';
 
 		if (type == 'm')	//ansi color

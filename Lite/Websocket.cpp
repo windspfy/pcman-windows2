@@ -1,5 +1,6 @@
 #include "Websocket.h"
 #include "ConnIO.h"
+#include "WinHttpWebsocket.h"
 
 #include <atomic>
 #include <deque>
@@ -239,7 +240,8 @@ void CWebsocket::HandleMessage(const websocket_incoming_message& msg)
 				try {
 					size_t n = task.get();
 					const auto &vec = buf.collection();
-					ws->delegate_->OnReceive(&vec[0], vec.size());
+					if (!vec.empty())
+						ws->delegate_->OnReceive(vec.data(), vec.size());
 				}
 				catch (const std::exception& ex) {
 					OutputDebugString(ex.what());
@@ -264,5 +266,16 @@ void CWebsocket::HandleMessage(const websocket_incoming_message& msg)
 std::shared_ptr<CConnIO> CreateWebsocket(
 	const CAddress& address,
 	std::shared_ptr<CConnEventDelegate> delegate) {
+	char backend[16] = {};
+	DWORD length = GetEnvironmentVariableA(
+		"PCMAN_WEBSOCKET_BACKEND", backend, sizeof(backend));
+	bool use_cpprest = length > 0 && length < sizeof(backend) &&
+		_stricmp(backend, "cpprest") == 0;
+	if (!use_cpprest) {
+		auto websocket = CreateWinHttpWebsocket(address, delegate);
+		if (websocket)
+			return websocket;
+	}
+
 	return std::make_shared<CWebsocket>(address, delegate);
 }

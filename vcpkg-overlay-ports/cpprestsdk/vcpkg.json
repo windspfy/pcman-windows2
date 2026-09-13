@@ -75,6 +75,7 @@
         },
         {
           "name": "websocketpp",
+          "default-features": false,
           "platform": "!uwp"
         }
       ]

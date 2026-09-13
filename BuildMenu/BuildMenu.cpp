@@ -2,8 +2,9 @@
 //
 
 #include <optional>
+#include <sstream>
 
-#include <cpprest/json.h>
+#include <nlohmann/json.hpp>
 
 #include "BuildMenu.h"
 #include "..\Lite\StdAfx.h"
@@ -20,10 +21,10 @@ namespace {
 
 constexpr const TCHAR *kHotkeyFileName = TEXT("hotkeys.json");
 
-constexpr const wchar_t *kHotkeys = L"hotkeys";
-constexpr const wchar_t *kCmd = L"cmd";
-constexpr const wchar_t *kFVirt = L"fVirt";
-constexpr const wchar_t *kKey = L"key";
+constexpr const char *kHotkeys = "hotkeys";
+constexpr const char *kCmd = "cmd";
+constexpr const char *kFVirt = "fVirt";
+constexpr const char *kKey = "key";
 
 constexpr const size_t kReadSize = 4096;
 
@@ -134,23 +135,17 @@ HACCEL AcceleratorTable::CreateHandle() const
 
 bool AcceleratorTable::Save()
 {
-	using web::json::value;
-
-	value hotkeys = value::array();
+	nlohmann::json hotkeys = nlohmann::json::array();
 	for (const auto &[cmd, accel] : cmd_to_accel_) {
-		value jaccel = value::object();
-		jaccel[kCmd] = value::number(cmd);
-		jaccel[kFVirt] = value::number(accel.fVirt);
-		jaccel[kKey] = value::number(accel.key);
-		hotkeys[hotkeys.size()] = jaccel;
+		hotkeys.push_back({
+			{kCmd, cmd},
+			{kFVirt, accel.fVirt},
+			{kKey, accel.key},
+		});
 	}
 
-	std::ostringstream ss;
-	value obj = web::json::value::object();
-	obj[kHotkeys] = hotkeys;
-	obj.serialize(ss);
-
-	std::string data = ss.str();
+	nlohmann::json obj = {{kHotkeys, hotkeys}};
+	std::string data = obj.dump();
 
 	CFile output;
 	if (!output.Open(ConfigPath + kHotkeyFileName, CFile::modeCreate | CFile::modeWrite))
@@ -163,10 +158,6 @@ bool AcceleratorTable::Save()
 // static
 AcceleratorTable AcceleratorTable::Load()
 {
-	using web::json::value;
-	using web::json::array;
-	using web::json::object;
-
 	std::stringstream ss;
 	{
 		CFile input;
@@ -183,16 +174,16 @@ AcceleratorTable AcceleratorTable::Load()
 
 	try {
 		AcceleratorTable table;
-		array hotkeys = value::parse(ss).as_object()[kHotkeys].as_array();
-		for (auto &jaccels : hotkeys) {
-			ACCEL accel;
-			accel.cmd = jaccels[kCmd].as_number().to_int32();
-			accel.fVirt = jaccels[kFVirt].as_number().to_int32();
-			accel.key = jaccels[kKey].as_number().to_int32();
+		const auto hotkeys = nlohmann::json::parse(ss).at(kHotkeys);
+		for (const auto &jaccel : hotkeys) {
+			ACCEL accel{};
+			accel.cmd = jaccel.at(kCmd).get<WORD>();
+			accel.fVirt = jaccel.at(kFVirt).get<BYTE>();
+			accel.key = jaccel.at(kKey).get<WORD>();
 			table.Set(accel);
 		}
 		return table;
-	} catch (web::json::json_exception &) {
+	} catch (const nlohmann::json::exception &) {
 		return Default();
 	}
 }

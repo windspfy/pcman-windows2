@@ -36,4 +36,5 @@ msbuild PCMan.sln /m /t:Rebuild /p:Configuration=Release /p:Platform=Win32
 
 `cpprestsdk` 已停止維護，且已從新版 vcpkg ports 中移除。本專案透過
 `vcpkg-overlay-ports/cpprestsdk` 保留 WebSocket 功能並加入新版 MSVC 所需的相容修補；
-這是維持既有程式可建置的封存方案，若要長期維護，仍應規劃替換該程式庫。
+HTTP 壓縮預設功能已停用，快捷鍵 JSON 已改用 `nlohmann/json`。這是維持既有
+WebSocket 程式可建置的封存方案，若要長期維護，仍應規劃替換該程式庫。

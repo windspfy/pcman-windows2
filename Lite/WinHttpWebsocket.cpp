@@ -367,8 +367,14 @@ private:
 			WINHTTP_HEADER_NAME_BY_INDEX,
 			&status,
 			&status_size,
-			WINHTTP_NO_HEADER_INDEX) || status != HTTP_STATUS_SWITCH_PROTOCOLS) {
-			LogWinHttpError("WebSocket HTTP upgrade", status ? status : GetLastError());
+			WINHTTP_NO_HEADER_INDEX)) {
+			LogWinHttpError("WinHttpQueryHeaders(WINHTTP_QUERY_STATUS_CODE)", GetLastError());
+			return false;
+		}
+		if (status != HTTP_STATUS_SWITCH_PROTOCOLS) {
+			char message[160];
+			sprintf_s(message, "WebSocket HTTP upgrade failed with HTTP status %lu\r\n", status);
+			OutputDebugStringA(message);
 			return false;
 		}
 

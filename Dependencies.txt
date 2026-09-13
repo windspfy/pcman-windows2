@@ -4,16 +4,13 @@
 
 需安裝「使用 C++ 的桌面開發」、MSVC v143、x86 MFC、Windows 11 SDK 與 vcpkg。
 
-- [開發] cpprestsdk 2.10.19 (須包含 websockets feature)
 - [開發] nlohmann/json（快捷鍵 JSON 讀寫）
 
 不需再手動執行全域 `vcpkg install`。專案根目錄的 vcpkg manifest 會在
 首次建置時自動還原相依套件。
 
-由於 cpprestsdk 已封存，且新版 vcpkg 已移除其 port，本專案使用
-vcpkg-overlay-ports/cpprestsdk 提供 WebSocket 相依宣告及新版 MSVC 相容修補。
-cpprestsdk 的 HTTP 壓縮預設功能已停用，因此不需要 zlib 或 Brotli。
-manifest 也明確停用 websocketpp 的預設功能，避免間接重新帶入 zlib。
+WebSocket 連線使用 Windows 內建的 WinHTTP，不需要額外的 WebSocket 或 TLS
+程式庫。一般功能仍可在較舊的 Windows 啟動，但 WSS 連線需要 Windows 8 以上。
 
 - [釋出] Microsoft Visual C++ Redistributable for Visual Studio 2015-2022 (x86)
 

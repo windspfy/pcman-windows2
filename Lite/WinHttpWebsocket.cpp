@@ -120,6 +120,11 @@ public:
 		if (!state_.compare_exchange_strong(
 			expected, WinHttpWebsocketState::CONNECTING))
 			return false;
+		if (!GetWinHttpWebsocketApi().IsAvailable()) {
+			state_ = WinHttpWebsocketState::CLOSED;
+			delegate_->OnConnect(false);
+			return false;
+		}
 
 		try {
 			connection_thread_ = std::thread(&CWinHttpWebsocket::Run, this);
@@ -480,7 +485,7 @@ private:
 
 			default:
 				// PTT uses binary messages. Text messages are intentionally ignored,
-				// matching the previous cpprestsdk backend.
+				// matching PCMan's existing WebSocket behavior.
 				break;
 			}
 		}
@@ -560,16 +565,9 @@ private:
 
 }  // namespace
 
-bool IsWinHttpWebsocketAvailable()
-{
-	return GetWinHttpWebsocketApi().IsAvailable();
-}
-
 std::shared_ptr<CConnIO> CreateWinHttpWebsocket(
 	const CAddress& address,
 	std::shared_ptr<CConnEventDelegate> delegate)
 {
-	if (!IsWinHttpWebsocketAvailable())
-		return nullptr;
 	return std::make_shared<CWinHttpWebsocket>(address, std::move(delegate));
 }

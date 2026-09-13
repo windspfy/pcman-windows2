@@ -13,3 +13,26 @@ PCMan
 Getting started
 ---
    * [PCMan程式專案建置和執行：逐步解說](../../wiki/Building_PCMan)
+
+使用 Visual Studio 2026 建置
+---
+
+請安裝「使用 C++ 的桌面開發」工作負載，並包含下列元件：
+
+* MSVC v143 x86/x64 建置工具
+* 適用於 x86 的 MFC
+* Windows 11 SDK 
+* vcpkg
+
+開啟 `PCMan.sln` 後可直接建置 `Debug|Win32` 或 `Release|Win32`。專案已啟用
+vcpkg manifest，首次建置會自動下載及編譯相依套件。
+
+也可以在 Developer PowerShell for Visual Studio 中執行：
+
+```powershell
+msbuild PCMan.sln /m /t:Rebuild /p:Configuration=Release /p:Platform=Win32
+```
+
+`cpprestsdk` 已停止維護，且已從新版 vcpkg ports 中移除。本專案透過
+`vcpkg-overlay-ports/cpprestsdk` 保留 WebSocket 功能並加入新版 MSVC 所需的相容修補；
+這是維持既有程式可建置的封存方案，若要長期維護，仍應規劃替換該程式庫。

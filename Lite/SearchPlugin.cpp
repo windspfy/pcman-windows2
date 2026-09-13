@@ -244,102 +244,45 @@ int CSearchPluginCollection::Load(LPCTSTR filepath)
 	return plugins.GetSize() - 1;
 }
 
-CString CSearchPluginCollection::UrlForSearch(int index, CString searchTerm, bool utf8)
+CString CSearchPluginCollection::UrlForSearch(int index, const CStringW& searchTerm)
 {
 	CString url = GetField(index, CSearchPluginCollection::URL);
-	char* utf8Str;
-	CString encodedTerm = _T("");
-	int utf8Len;
-	CString tmp;
-	char hex[5];
-
-	if (stricmp(GetField(index, CSearchPluginCollection::INPUTENCODING), "utf-8") == 0)
+	const UINT codePage = stricmp(GetField(index, CSearchPluginCollection::INPUTENCODING), "utf-8") == 0
+		? CP_UTF8 : CP_ACP;
+	const int byteLength = ::WideCharToMultiByte(codePage, 0, searchTerm,
+		searchTerm.GetLength(), NULL, 0, NULL, NULL);
+	CString encodedBytes;
+	char* byteBuffer = encodedBytes.GetBuffer(byteLength);
+	if (byteLength > 0)
 	{
-		if (utf8)
-		{
-			utf8Str = (char*)LPCTSTR(searchTerm);
-			utf8Len = searchTerm.GetLength();
-		}
-		else
-			utf8Str = MultiByteToUTF8(searchTerm, &utf8Len);
-		//utf8Str = MultiByteToMultiByte( CP_ACP, CP_UTF8, searchTerm, &utf8Len );
-		for (int i = 0; i < utf8Len; i++)
-		{
-			int ch = (unsigned char)utf8Str[i];
-			if (isalnum(ch))      // 'A'-'Z', 'a'-'z', '0'-'9'
-			{
-				encodedTerm += (char)ch;
-			}
-			else if (ch == ' ')  					// space
-			{
-				encodedTerm += '+';
-			}
-			else if (strchr("-_.!~*\\()", ch))  		// unreserved
-			{
-				encodedTerm += (char)ch;
-			}
-			else if (ch <= 127)  				// other ASCII
-			{
-				encodedTerm += CharToHex(ch, hex);
-			}
-			else if ((ch &0xE0) == 0xC0)  			// non-ASCII <= 0x7FF
-			{
-				encodedTerm += CharToHex(ch, hex);
-				encodedTerm += CharToHex(ch + 1, hex);
-				ch++;
-			}
-			else if ((ch&0xF0) == 0xE0)  			// 0x7FF < ch <= 0xFFFF
-			{
-				encodedTerm += CharToHex(ch, hex);
-				encodedTerm += CharToHex((unsigned char)utf8Str[i+1], hex);
-				encodedTerm += CharToHex((unsigned char)utf8Str[i+2], hex);
-				i += 2;
-			}
-			else if ((ch&0xF8) == 0xF0)
-			{
-				encodedTerm += CharToHex(ch, hex);
-				encodedTerm += CharToHex((unsigned char)utf8Str[i+1], hex);
-				encodedTerm += CharToHex((unsigned char)utf8Str[i+2], hex);
-				encodedTerm += CharToHex((unsigned char)utf8Str[i+3], hex);
-				i += 3 ;
-			}
-			else
-				encodedTerm += CharToHex(ch, hex);
-		}
-		if (! utf8)
-			delete[] utf8Str;
+		::WideCharToMultiByte(codePage, 0, searchTerm, searchTerm.GetLength(),
+			byteBuffer, byteLength, NULL, NULL);
 	}
-	else
+	encodedBytes.ReleaseBuffer(byteLength);
+
+	CString encodedTerm = _T("");
+	char hex[5];
+	for (int i = 0; i < encodedBytes.GetLength(); ++i)
 	{
-		if (utf8)
-			utf8Str = UTF8ToMultiByte(searchTerm, &utf8Len);
+		const int ch = static_cast<unsigned char>(encodedBytes[i]);
+		if ((ch >= 'A' && ch <= 'Z') ||
+			(ch >= 'a' && ch <= 'z') ||
+			(ch >= '0' && ch <= '9'))
+		{
+			encodedTerm += static_cast<char>(ch);
+		}
+		else if (ch == ' ')
+		{
+			encodedTerm += '+';
+		}
+		else if (strchr("-_.!~*\\()", ch))
+		{
+			encodedTerm += static_cast<char>(ch);
+		}
 		else
 		{
-			utf8Len = searchTerm.GetLength();
-			utf8Str = (char*)(LPCTSTR)searchTerm;
+			encodedTerm += CharToHex(ch, hex);
 		}
-
-		for (int i = 0; i < utf8Len; i++)
-		{
-			int ch = (unsigned char)utf8Str[i];
-			if (isalnum(ch))      // 'A'-'Z', 'a'-'z', '0'-'9'{
-			{
-				encodedTerm += (char)ch;
-			}
-			else if (ch == ' ')  					// space
-			{
-				encodedTerm += '+';
-			}
-			else if (strchr("-_.!~*\\()", ch))  		// unreserved
-			{
-				encodedTerm += (char)ch;
-			}
-			else
-				encodedTerm += CharToHex(ch, hex);
-		}
-
-		if (utf8)
-			delete []utf8Str;
 	}
 	url.Replace("{searchTerms}", encodedTerm);
 	TestString = encodedTerm;

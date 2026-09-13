@@ -21,7 +21,7 @@ Getting started
 
 * MSVC v143 x86/x64 建置工具
 * 適用於 x86 的 MFC
-* Windows 11 SDK 10.0.26100.0
+* Windows 11 SDK 
 * vcpkg
 
 開啟 `PCMan.sln` 後可直接建置 `Debug|Win32` 或 `Release|Win32`。專案已啟用

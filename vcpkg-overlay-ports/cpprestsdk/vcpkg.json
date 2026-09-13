@@ -36,22 +36,14 @@
     }
   ],
   "default-features": [
-    {
-      "name": "brotli",
-      "platform": "windows"
-    },
+  "brotli",
     "compression"
   ],
   "features": {
     "brotli": {
       "description": "Brotli compression support",
       "dependencies": [
-        "brotli",
-        {
-          "name": "cpprestsdk",
-          "default-features": false,
-          "features": ["compression"]
-        }
+        "brotli"
       ]
     },
     "compression": {

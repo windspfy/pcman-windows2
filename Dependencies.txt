@@ -2,8 +2,7 @@
 
 - [開發] Visual Studio 2026 (Community 即可)
 
-需安裝「使用 C++ 的桌面開發」、MSVC v143、x86 MFC、Windows 11 SDK
-10.0.26100.0 與 vcpkg。
+需安裝「使用 C++ 的桌面開發」、MSVC v143、x86 MFC、Windows 11 SDK 與 vcpkg。
 
 - [開發] cpprestsdk 2.10.19 (須包含 websockets feature)
 

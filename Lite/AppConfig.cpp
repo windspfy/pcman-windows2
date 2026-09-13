@@ -30,53 +30,6 @@ const COLORREF CAppConfig::default_colormap[] =
 };
 
 
-#ifdef _COMBO_
-TBBUTTON CAppConfig::maintb_btns[] =
-{
-//	Combo Version --------------------------------
-	{0, ID_SITE_LIST, TBSTATE_ENABLED, TBSTYLE_BUTTON,	0, 0},
-	{1, ID_NEW_WWW,	TBSTATE_ENABLED, TBSTYLE_BUTTON | TBSTYLE_DROPDOWN,	0, 1},
-	{2, ID_GOBACK,		TBSTATE_ENABLED, TBSTYLE_BUTTON | TBSTYLE_DROPDOWN,	0, 2},
-	{3, ID_GOFORWARD,	TBSTATE_ENABLED, TBSTYLE_BUTTON | TBSTYLE_DROPDOWN,	0, 3},
-//-------------------------------------------------
-	{4, ID_DISCONNECT,	TBSTATE_ENABLED, TBSTYLE_BUTTON,	0, 4},
-	{5, ID_RECONNECT,	TBSTATE_ENABLED, TBSTYLE_BUTTON,	0, 5},
-	{6, ID_CONNECT_CLOSE, TBSTATE_ENABLED, TBSTYLE_BUTTON,	0, 6},
-	{7, ID_ADDTOFAVORITE, TBSTATE_ENABLED, TBSTYLE_BUTTON,	0, 7},
-	{0, ID_SEPARATOR,	TBSTATE_ENABLED, TBSTYLE_SEP,	0, 0},
-
-	{8, ID_COPY,			TBSTATE_ENABLED, TBSTYLE_BUTTON,	0, 8},
-	{9, ID_ANSICOPY,		TBSTATE_ENABLED, TBSTYLE_BUTTON,	0, 9},
-	{10, ID_PASTE,		TBSTATE_ENABLED, TBSTYLE_BUTTON,	0, 10},
-	{11, ID_AUTO_DBCS,	TBSTATE_ENABLED, TBSTYLE_BUTTON,	0, 11},
-	{0, ID_SEPARATOR,	TBSTATE_ENABLED, TBSTYLE_SEP,	0, 0},
-
-	{12, ID_FONT_BTN,	TBSTATE_ENABLED, TBSTYLE_BUTTON,	0, 12},
-	{13, ID_VIEW_CONFIG,	TBSTATE_ENABLED, TBSTYLE_BUTTON,	0, 13},
-	{14, ID_VIEW_FULLSCR, TBSTATE_ENABLED, TBSTYLE_BUTTON,	0, 14},
-	{0, ID_SEPARATOR,	TBSTATE_ENABLED, TBSTYLE_SEP,	0, 0},
-
-	{15, ID_SETBK,		TBSTATE_ENABLED, TBSTYLE_BUTTON,	0, 15},
-	{16, ID_TOOL_SYMBOLS, TBSTATE_ENABLED, TBSTYLE_BUTTON,	0, 16},
-	{17, ID_TOOL_LOCK,	TBSTATE_ENABLED, TBSTYLE_BUTTON,	0, 17},
-	{0, ID_SEPARATOR,	TBSTATE_ENABLED, TBSTYLE_SEP,	0, 0},
-
-	{18, ID_ABOUT,		TBSTATE_ENABLED, TBSTYLE_BUTTON,	0, 18},
-
-	{19, ID_NCIKU,      TBSTATE_ENABLED, TBSTYLE_BUTTON,	0, 19},
-	{20, ID_WIKIPEDIA,      TBSTATE_ENABLED, TBSTYLE_BUTTON,	0, 20},
-};
-
-TBBUTTON CAppConfig::webbar_btns[] =
-{
-	{0, ID_WWWHOME,		TBSTATE_ENABLED, TBSTYLE_BUTTON,	0, 0},
-	{1, ID_WEBPAGE_ADDAD, TBSTATE_ENABLED, TBSTYLE_BUTTON,	0, 1},
-	{2, ID_BLOCK_POPUP, TBSTATE_ENABLED, TBSTYLE_BUTTON,	0, 2},
-	{3, ID_ADSHTTP,		TBSTATE_ENABLED, TBSTYLE_BUTTON,	0, 3},
-	{4, ID_ADSTELNET,	TBSTATE_ENABLED, TBSTYLE_BUTTON,	0, 4},
-//	{3,ID_ADSHTTP,		TBSTATE_ENABLED,TBSTYLE_BUTTON,	0,3},
-};
-#else
 TBBUTTON CAppConfig::maintb_btns[] =
 {
 	{0, ID_SITE_LIST, TBSTATE_ENABLED, TBSTYLE_BUTTON,	0, 0},
@@ -108,7 +61,6 @@ TBBUTTON CAppConfig::maintb_btns[] =
 	{18, ID_WIKIPEDIA,      TBSTATE_ENABLED, TBSTYLE_BUTTON,	0, 18},
 	
 };
-#endif
 
 CString GetIEPath()
 {
@@ -132,9 +84,6 @@ void CAppConfig::Load(LPCTSTR config_path)
 	if (! CConfigFile::Load())  // the ini file cannot be loaded
 		Save(ConfigPath + CONFIG_FILENAME); // save default value as ini
 
-#if defined _COMBO_
-	LoadWebPageFilter();
-#endif
 
 	lock_pcman = false;
 }
@@ -144,16 +93,10 @@ void CAppConfig::Save(LPCTSTR config_path)
 	SetFilePath(config_path);
 	CConfigFile::Save();
 
-#if defined _COMBO_
-	SaveWebPageFilter();
-#endif
 }
 
 CAppConfig::CAppConfig()
 		: main_toolbar_inf(maintb_btns, sizeof(maintb_btns) / sizeof(TBBUTTON))
-#ifdef _COMBO_
-		, webbar_inf(webbar_btns, sizeof(webbar_btns) / sizeof(TBBUTTON))
-#endif
 {
 }
 
@@ -166,9 +109,6 @@ const char* CAppConfig::personal_files[]={
 	UI_FILENAME,
 	HOMEPAGE_FILENAME,
 	BBS_FAVORITE_FILENAME
-#if defined(_COMBO_)
-	,WWW_FAVORITE_FILENAME
-#endif
 };
 
 */
@@ -244,47 +184,6 @@ CString LoadString(CMemIniFile& file)
 	return str;
 }
 
-#ifdef	_COMBO_
-inline void CAppConfig::LoadWebPageFilter()
-{
-	CFile file;
-	if (file.Open(ConfigPath + WWW_ADFILTER_FILENAME, CFile::modeRead))
-	{
-		DWORD len = file.GetLength();
-		char* buf = new char[ len + 1];
-		file.Read(buf, len);
-		file.Close();
-		buf[len] = '\0';
-
-		char *line;
-		char *nextline = NULL;
-		for (line = buf; line; line = nextline)
-		{
-			nextline = strnextline(line);
-			if (*line)
-				webpage_filter.Add(line);
-		}
-		delete []buf;
-		webpage_filter.FreeExtra();
-	}
-}
-
-inline void CAppConfig::SaveWebPageFilter()
-{
-	CFile file;
-	if (file.Open(ConfigPath + WWW_ADFILTER_FILENAME, CFile::modeWrite | CFile::modeCreate))
-	{
-		int c = webpage_filter.GetSize();
-		for (int i = 0; i < c; ++i)
-		{
-			CString& line = webpage_filter[i];
-			file.Write(LPCTSTR(line), line.GetLength());
-			file.Write("\r\n", 2);
-		}
-		file.Close();
-	}
-}
-#endif
 
 bool CAppConfig::OnDataExchange(bool load)
 {
@@ -438,42 +337,17 @@ bool CAppConfig::OnDataExchange(bool load)
 
 // Customize toolbar buttons
 	CFG_CUSTOM("main_toolbar", main_toolbar_inf)
-#if defined _COMBO_
-	CFG_CUSTOM("web_bar", webbar_inf)
-#endif
 
 // ReBar Position
 	CFG_CUSTOM("rebar0", rebar_bands[0])
 	CFG_CUSTOM("rebar1", rebar_bands[1])
 	CFG_CUSTOM("rebar2", rebar_bands[2])
 	CFG_CUSTOM("rebar3", rebar_bands[3])
-#if defined _COMBO_
-	CFG_CUSTOM("rebar4", rebar_bands[4])
-	CFG_CUSTOM("rebar5", rebar_bands[5])
-#endif
 	CFG_BYTE(use_riched20)
 	CFG_STR(last_bbslist_item)
 	END_CFG_SECTION()
 
 //	Web Settings
-#if defined (_COMBO_)
-	BEGIN_CFG_SECTION(Web)
-	CFG_BYTE(ads_open_new)
-	CFG_BYTE(disable_popup)
-	CFG_BYTE(searchbar_cleanup)
-	CFG_BYTE(showwb)
-	CFG_BYTE(fullscr_showwb)
-	CFG_BYTE(showsearchbar)
-	CFG_BYTE(fullscr_showsearchbar)
-	CFG_BYTE(autosort_favorite)
-	CFG_BYTE(disable_script_error)
-	CFG_BYTE(use_ie_fav)
-	CFG_BYTE(autowrap_favorite)
-	CFG_SHORT(search_engine)
-	END_CFG_SECTION()
-// Object Section
-//	CStringArray webpage_filter;
-#endif
 
 	BEGIN_CFG_FILE(table)
 	CFG_SECTION(General)
@@ -482,9 +356,6 @@ bool CAppConfig::OnDataExchange(bool load)
 	CFG_SECTION(Font)
 	CFG_SECTION(Site)
 	CFG_CUSTOM_SECTION("HyperLink", hyper_links)
-#if defined (_COMBO_)
-	CFG_SECTION(Web)
-#endif
 	CFG_SECTION(Window)
 	END_CFG_FILE()
 

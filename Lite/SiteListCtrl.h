@@ -34,9 +34,6 @@ public:
 	HTREEITEM bbsfavorite;
 	HTREEITEM bbslist;
 	HTREEITEM home;
-#ifdef	_COMBO_
-	HTREEITEM wwwfavorite;
-#endif
 	BOOL changed;
 	HTREEITEM CopyTo(HTREEITEM from, HTREEITEM parent, HTREEITEM insert_after, bool prevent_dup = false);
 	CSiteListCtrl();
@@ -73,9 +70,6 @@ inline BOOL CSiteListCtrl::IsDefaultItem(HTREEITEM item)
 {
 	return (item == bbsfavorite ||
 			item == bbslist ||
-#if defined(_COMBO_)
-			item == wwwfavorite ||
-#endif
 			item == home);
 }
 

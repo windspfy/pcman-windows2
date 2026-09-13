@@ -20,11 +20,6 @@
 
 #include "InstantTranDlg.h"
 
-#if defined _COMBO_
-#include "../Combo/adlist.h"
-#include "../Combo/aditem.h"
-#include "../Combo/SearchBar.h"
-#endif
 
 #define	CT_MENU		1
 #define	CT_HAS_SUB	2
@@ -92,9 +87,6 @@ public:
 
 	void LoadBBSFavorites();
 	void LoadHistoryMenu();
-#ifdef	_COMBO_
-	void LoadWebFavorites();
-#endif
 
 	void OpenHomepage();
 	void OpenLastSession();
@@ -109,17 +101,11 @@ public:
 	CFont bar_font;
 	CStatic status_bar;
 	CComboBox address_bar;
-#ifdef	_COMBO_
-	CSearchBar search_bar;
-#endif
 
 	HMENU main_menu;
 	HMENU edit_menu;
 	HMENU auto_dbcs_menu;
 	HMENU bbs_fav_menu;
-#ifdef	_COMBO_
-	HMENU web_fav_menu;
-#endif
 	HMENU ansi_menu;
 	HMENU history_menu;
 
@@ -143,14 +129,6 @@ public:
 	UINT showcmd;
 	CConn* prev_conn;
 
-#if defined _COMBO_
-	HMENU webtab_popup_menu;
-	CImageList img_webbar;
-	CCustomToolBar	web_bar;
-	CBitmap web_bar_bkgnd;
-	CProgressCtrl progress_bar;
-	HWND focus;
-#endif
 
 // Generated message map functions
 public:
@@ -283,57 +261,10 @@ public:
 	void OnAddressComboCancel();
 	LRESULT OnQueryAppConfig(WPARAM w, LPARAM l);
 
-#ifdef _COMBO_
-
-	afx_msg void OnGoBack();
-	afx_msg void OnGoForward();
-	afx_msg void OnWebPageAddToAdFilter();
-	afx_msg void OnWebHome();
-	afx_msg void OnAdsHttp();
-	afx_msg void OnAdsTelnet();
-	afx_msg void OnNewWebConn();
-	afx_msg void OnNewHome();
-	afx_msg void OnEditAdFilter();
-	afx_msg void OnIESetup();
-	afx_msg void OnWebPagePrint();
-	afx_msg void OnWebPagePrintSettings();
-	afx_msg void OnWebPageOpen();
-	afx_msg void OnWebPageViewSrc();
-	afx_msg void OnNewCurPage();
-	afx_msg void OnNewCurPageInIE();
-	afx_msg void OnWebPageSaveAs();
-	afx_msg void OnBlockPopup();
-	afx_msg void OnSearchbarCleanup();
-	afx_msg void OnAdsOpenNew();
-	afx_msg void OnUpdateAddressBarOpenNew(CCmdUI* pCmdUI);
-	afx_msg void OnImportIEFavorites();
-	afx_msg void OnExportIEFavorites();
-	afx_msg void OnUpdateBlockPopup(CCmdUI* pCmdUI);
-	afx_msg void OnUpdateSearchbarCleanup(CCmdUI* pCmdUI);
-	afx_msg void OnCustomizeWebBar();
-	afx_msg void OnShowWebBar();
-	afx_msg void OnUpdateShowWebBar(CCmdUI* pCmdUI);
-	afx_msg void OnShowSearchBar();
-	afx_msg void OnUpdateShowSearchBar(CCmdUI* pCmdUI);
-	afx_msg void OnUpdateIsWebPage(CCmdUI* pCmdUI);
-	afx_msg void OnSearchBarFocus();
-
-	void ImportIEFavorites();
-
-	BOOL FindAdFilter(LPCTSTR title, LPCTSTR address);
-	CEdit edit;
-	LRESULT OnRemoveWebConn(WPARAM wparam, LPARAM lparam);
-	BOOL FilterWebConn(CWebConn* web_conn);
-	void OnToolbarMenuDropDown(NMHDR* pNMHDR, LRESULT* pResult);
-	void OnSearchBarCancel();
-#endif
 
 	DECLARE_MESSAGE_MAP()
 protected:
 	void OnUpdateSaveSession(CCmdUI* pCmdUI);
-#if defined(_COMBO_)
-	void OnBrowserFontSize(UINT id);
-#endif
 
 	afx_msg BOOL OnToolTipNeedText(UINT id, NMHDR* nmhdr, LRESULT* r);
 	inline void MinimizeToTray();

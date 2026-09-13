@@ -4,17 +4,10 @@ Unicode true
 !include x64.nsh
 
 ; HM NIS Edit Wizard helper defines
-!ifdef _COMBO_
-!define PRODUCT_NAME "PCMan Combo"
-!define SRC_DIR "Combo\Release\PCMan Combo"
-!define CONFIG_FOLDER "PCMAN Combo"
-OutFile ".\Release\PCManCB.exe"
-!else
 !define PRODUCT_NAME "PCMan"
 !define SRC_DIR "Lite\Release\PCMan"
 !define CONFIG_FOLDER "PCMAN"
 OutFile ".\Release\PCMan.exe"
-!endif
 
 !define PRODUCT_DIR "${PRODUCT_NAME}"
 !define PRODUCT_VERSION "Novus"

@@ -1,6 +1,7 @@
 PCMan
 ---
-這是 PCMan 2004 和 PCMan 2004 Combo 的程式碼，需使用 VC++ 6.0 以上版本
+這是 PCMan BBS 用戶端的程式碼。PCMan Combo 已停止維護並自主要開發分支移除；
+最後版本封存於 Git tag `combo-final`。
 
 除 Lite 目錄下的 Rijndael.cpp 和 Rijndael.h 為 George Anescu 撰寫，
 不是使用 GPL 授權以外，其餘程式碼皆是使用 GPL 授權。

@@ -27,11 +27,6 @@
 
 #include "OleImage.h"
 
-#if defined	_COMBO_
-#include "../Combo/WebPageDlg.h"
-#include "../Combo/WebConn.h"
-#include "../Combo/WebCfgPage.h"
-#endif
 
 #include <wininet.h>
 #include <afxtempl.h>
@@ -181,17 +176,10 @@ CTermView::CTermView()
 	ime_prop = ImmGetProperty(GetKeyboardLayout(0), IGP_PROPERTY);
 	os_ver_nt = ::GetVersion() < 0x80000000 ? TRUE : FALSE;
 
-#if defined _COMBO_
-	con = NULL;
-	autosort_favorite = 0;
-#endif
 }
 
 CTermView::~CTermView()
 {
-#if defined	_COMBO_
-//	CloseHandle(lock);
-#endif
 	if (memdc)
 	{
 		DeleteDC(memdc);
@@ -695,11 +683,7 @@ void CTermView::OnTimer(UINT nIDEvent)
 		if (0 == all_telnet_conns.GetSize())
 			return;
 
-#ifdef	_COMBO_
-		if (con && con->is_connected)
-#else
 		if (telnet && telnet->is_connected)
-#endif
 			parent->UpdateStatus();
 
 		blight = !blight;
@@ -1114,19 +1098,8 @@ void CTermView::SetScrollBar()
 
 void CTermView::OnDisConnect()
 {
-#if defined	_COMBO_
-	if (!con)
-		return;
-
-	if (!telnet)
-	{
-		((CWebConn*)con)->web_browser.wb_ctrl.Stop();
-		return;
-	}
-#else
 	if (!telnet)
 		return;
-#endif
 
 	if (telnet->is_connecting || telnet->is_lookup_host)
 	{
@@ -1464,10 +1437,6 @@ void CTermView::OnReconnect()
 {
 	if (telnet)
 		ReConnect(telnet);
-#if defined	_COMBO_
-	else if (con)
-		((CWebConn*)con)->web_browser.wb_ctrl.Refresh();
-#endif
 }
 
 void CTermView::OnHistory(UINT id)
@@ -1950,10 +1919,6 @@ CConn* CTermView::NewConn(CAddress address, CString name, LPCTSTR cfg_path)
 	new_telnet->address = address;
 	new_telnet->name = name;
 
-#if defined	_COMBO_
-	if (!new_telnet->is_web)	//如果是連線BBS,新開BBS畫面
-	{
-#endif
 		new_telnet->cfg_path = cfg_path;
 
 		//為新的socket載入設定值
@@ -1979,9 +1944,6 @@ CConn* CTermView::NewConn(CAddress address, CString name, LPCTSTR cfg_path)
 		}
 		new_telnet->CreateBuffer();
 
-#if defined	_COMBO_
-	}
-#endif
 	parent->NewTab(new_telnet);
 	all_telnet_conns.Add(new_telnet);
 	return new_telnet;
@@ -2527,47 +2489,6 @@ void CTermView::OnSmoothDraw()
 	Invalidate(FALSE);
 }
 
-#if defined	_COMBO_
-BOOL CTermView::SetWindowPos(const CWnd *pWndInsertAfter, int x, int y, int cx, int cy, UINT nFlags)
-{
-	if (con && !telnet)
-		((CWebConn*)con)->web_browser.SetWindowPos(pWndInsertAfter, x, y, cx, cy, nFlags);
-	return CWnd::SetWindowPos(pWndInsertAfter, x, y, cx, cy, nFlags);
-}
-
-void CTermView::MoveWindow(int x, int y, int nWidth, int nHeight, BOOL bRepaint)
-{
-	CWnd::MoveWindow(x, y, nWidth, nHeight, bRepaint);
-	if (con && !telnet)
-		((CWebConn*)con)->web_browser.MoveWindow(x, y, nWidth, nHeight, bRepaint);
-}
-
-CWebConn* CTermView::ConnectWeb(CAddress address, BOOL act)
-{
-	CWebConn* newcon = new CWebConn;
-	newcon->web_browser.view = this;
-	newcon->name = (newcon->address = address).URL();
-	newcon->web_browser.parent = parent;
-	newcon->web_browser.Create(NULL, NULL, WS_CHILD, CRect(0, 0, 0, 0), parent, 0);
-	newcon->web_browser.wb_ctrl.put_RegisterAsBrowser(TRUE);
-	newcon->web_browser.wb_ctrl.put_RegisterAsDropTarget(TRUE);
-	parent->NewTab(newcon);
-
-	if (address.IsValid())
-	{
-		COleVariant v;
-		COleVariant url = address.URL();
-		newcon->web_browser.wb_ctrl.Navigate2(&url, &v, &v, &v, &v);
-	}
-	if (act)
-		parent->SwitchToConn(newcon);
-	else
-		newcon->web_browser.EnableWindow(FALSE);
-
-	parent->FilterWebConn(newcon);
-	return newcon;
-}
-#endif
 
 void CMainFrame::SendFreqStr(CString str, BYTE inf)
 {
@@ -3018,13 +2939,6 @@ void CTermView::ConnectStr(CString name, CString dir)
 	char type = name[0];
 	name = name.Mid(1, i - 1);
 
-#if defined(_COMBO_)
-	if (type != 's')
-	{
-		ConnectWeb(CAddress(url), TRUE);
-		return;
-	}
-#endif
 
 	SetFocus();
 

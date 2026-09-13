@@ -59,12 +59,6 @@ BOOL CGeneralPage::OnInitDialog()
 	CheckDlgButton(IDC_FULL_SHOWCLOSE, AppConfig.fullscr_showclose);
 	CheckDlgButton(IDC_FULL_USE_ANSIBAR, AppConfig.full_use_ansi_bar);
 
-#ifdef	_COMBO_
-	::ShowWindow(::GetDlgItem(m_hWnd, IDC_FULL_SHOWWB), SW_SHOW);
-	CheckDlgButton(IDC_FULL_SHOWWB, AppConfig.fullscr_showwb);
-	::ShowWindow(::GetDlgItem(m_hWnd, IDC_FULL_SHOWSEARCH), SW_SHOW);
-	CheckDlgButton(IDC_FULL_SHOWSEARCH, AppConfig.fullscr_showsearchbar);
-#endif
 
 	WORD mod = ((AppConfig.pcman_hotkey_mod & MOD_ALT) ? HOTKEYF_ALT : 0) |
 			   ((AppConfig.pcman_hotkey_mod & MOD_CONTROL) ? HOTKEYF_CONTROL : 0) |
@@ -99,10 +93,6 @@ void CGeneralPage::OnOK()
 	AppConfig.fullscr_showclose = IsDlgButtonChecked(IDC_FULL_SHOWCLOSE);
 	AppConfig.full_use_ansi_bar = IsDlgButtonChecked(IDC_FULL_USE_ANSIBAR);
 
-#ifdef	_COMBO_
-	AppConfig.fullscr_showwb = IsDlgButtonChecked(IDC_FULL_SHOWWB);
-	AppConfig.fullscr_showsearchbar = IsDlgButtonChecked(IDC_FULL_SHOWSEARCH);
-#endif
 
 	WORD mod, vk;
 	m_wndHotkey.GetHotKey(vk, mod);

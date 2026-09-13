@@ -18,9 +18,6 @@
 #include <afxtempl.h>
 
 /*
-#ifdef	_COMBO_
-	#include"../Combo/menumapitem.h"
-#endif
 */
 
 #define WM_CONN_EVENT (WM_USER + 100)
@@ -31,12 +28,7 @@ bool find_link(char* type, char* str, int& start, int& end);
 class CMainFrame;
 
 
-#ifdef	_COMBO_
-class CWebConn;
-struct MENUMAPITEM;
-#else	//在不支援 Web 的版本中直接把TCon定義成MySocket省去麻煩
 //	typedef		CTelnetConn	CConn;
-#endif
 
 class CTermView : public CWnd
 {
@@ -47,11 +39,6 @@ protected:
 	static LPSTR ctviewcls;
 
 public:
-#ifdef	_COMBO_
-	CStringList favorite_ads;
-	BOOL autosort_favorite;
-	CConn* con;
-#endif
 
 	CTelnetConn* telnet;
 	int lineh;
@@ -153,12 +140,6 @@ public:
 	CString GetSelText();
 	void FindStart();
 
-#ifdef	_COMBO_
-	CWebConn* ConnectWeb(CAddress address, BOOL act);
-	void MoveWindow(int x, int y, int nWidth, int nHeight, BOOL bRepaint = TRUE);
-	BOOL SetWindowPos(const CWnd* pWndInsertAfter, int x, int y, int cx, int cy, UINT nFlags);
-
-#endif
 
 	void OnHistory(UINT id);
 	inline void FillBkRect(CDC& dc, CRect& rc, BYTE atb, BOOL bkinvirt = 0);

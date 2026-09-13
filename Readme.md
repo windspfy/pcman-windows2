@@ -1,6 +1,7 @@
 PCMan
 ---
-這是 PCMan 2004 和 PCMan 2004 Combo 的程式碼，需使用 VC++ 6.0 以上版本
+這是 PCMan BBS 用戶端的程式碼。PCMan Combo 已停止維護並自主要開發分支移除；
+最後版本封存於 Git tag `combo-final`。
 
 除 Lite 目錄下的 Rijndael.cpp 和 Rijndael.h 為 George Anescu 撰寫，
 不是使用 GPL 授權以外，其餘程式碼皆是使用 GPL 授權。
@@ -33,6 +34,6 @@ vcpkg manifest，首次建置會自動下載及編譯相依套件。
 msbuild PCMan.sln /m /t:Rebuild /p:Configuration=Release /p:Platform=Win32
 ```
 
-`cpprestsdk` 已停止維護，且已從新版 vcpkg ports 中移除。本專案透過
-`vcpkg-overlay-ports/cpprestsdk` 保留 WebSocket 功能並加入新版 MSVC 所需的相容修補；
-這是維持既有程式可建置的封存方案，若要長期維護，仍應規劃替換該程式庫。
+WebSocket 連線使用 Windows 內建的 WinHTTP，不需要額外部署 WebSocket、OpenSSL
+或其他 TLS 程式庫；WSS 連線需要 Windows 8 以上。快捷鍵 JSON 讀寫使用
+`nlohmann/json`，由 vcpkg manifest 自動還原。

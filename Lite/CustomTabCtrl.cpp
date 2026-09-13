@@ -289,12 +289,7 @@ void CCustomTabCtrl::DrawItem(LPDRAWITEMSTRUCT lpds)
 	COLORREF bkcolor, textcolor;
 	dc.SetBkMode(TRANSPARENT);
 //設定文字和背景顏色
-#ifdef	_COMBO_
-	//收到熱訊，或者網頁下載完畢，反白提示!
-	if (item.iImage == 5 && !(lpds->itemState & ODS_SELECTED))
-#else
 	if (item.iImage == 5 && !(lpds->itemState & ODS_SELECTED))	//收到熱訊，反白提示!
-#endif
 
 	{
 		textcolor = GetSysColor(COLOR_HIGHLIGHTTEXT);
@@ -345,9 +340,6 @@ void CCustomTabCtrl::DrawItem(LPDRAWITEMSTRUCT lpds)
 	dc.SetTextColor(textcolor);
 	lpds->rcItem.left = icox + icon_size + scaler.CalcX(2);
 	lpds->rcItem.top += (lpds->rcItem.bottom - lpds->rcItem.top - scaler.CalcY(12)) / 2;
-//#if defined(_COMBO_)
-//	lpds->rcItem.right-=3;
-//#endif
 	dc.DrawText(text, strlen(text), &lpds->rcItem, DT_SINGLELINE | DT_END_ELLIPSIS);
 	dc.Detach();
 }

@@ -106,7 +106,7 @@
       </Command>
     </PreLinkEvent>
     <Link>
-      <AdditionalDependencies>wsock32.lib;winmm.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>wsock32.lib;winmm.lib;Version.lib;Winhttp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(TargetPath)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -156,7 +156,7 @@
       </Command>
     </PreLinkEvent>
     <Link>
-      <AdditionalDependencies>wsock32.lib;winmm.lib;Version.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>wsock32.lib;winmm.lib;Version.lib;Winhttp.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(TargetPath)</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ProgramDatabaseFile>.\Release/PCMan.pdb</ProgramDatabaseFile>
@@ -473,6 +473,7 @@
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">MaxSpeed</Optimization>
     </ClCompile>
     <ClCompile Include="Websocket.cpp" />
+    <ClCompile Include="WinHttpWebsocket.cpp" />
     <ClCompile Include="WindowState.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">EnableFastChecks</BasicRuntimeChecks>
@@ -559,6 +560,7 @@
     <ClInclude Include="TriggerList.h" />
     <ClInclude Include="Ucs2Conv.h" />
     <ClInclude Include="Websocket.h" />
+    <ClInclude Include="WinHttpWebsocket.h" />
     <ClInclude Include="WindowState.h" />
     <ClInclude Include="WinUtils.h" />
   </ItemGroup>

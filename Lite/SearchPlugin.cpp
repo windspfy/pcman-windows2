@@ -556,10 +556,8 @@ HMENU CSearchPluginCollection::CreateSearchMenu()
 	MENUITEMINFO search_menuiteminfo = { sizeof(MENUITEMINFO) };
 	HMENU search_menu = NULL;
 
-#if ! defined(_COMBO_)
 	// Lite version call this function before showing popup menu to reduce startup time
 	SearchPluginCollection.LoadAll();
-#endif
 
 	if (SearchPluginCollection.GetCount() > 0)
 	{

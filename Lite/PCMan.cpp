@@ -12,13 +12,7 @@
 #include "SearchPlugin.h"
 #include "OleImage.h"
 
-#ifdef	_COMBO_
-//	#include <..\src\occimpl.h>
-#include "..\Combo\CustSite.h"
-#include "..\Combo\Version.h"
-#else
 #include "..\Lite\Version.h"
-#endif
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -105,11 +99,7 @@ BOOL CApp::InitInstance()
 		ConfigPath.ReleaseBuffer();
 		if (ret)
 		{
-#if defined (_COMBO_)
-			ConfigPath += "\\PCMan Combo\\";
-#else
 			ConfigPath += "\\PCMan\\";
-#endif
 			if (!IsFileExist(ConfigPath))	// Copy default settings when necessary
 			{
 				CreateDirectory(ConfigPath, NULL);
@@ -121,9 +111,6 @@ BOOL CApp::InitInstance()
 
 				CopyFile(DefaultConfigPath + TOOLBAR_BMP_FILENAME, ConfigPath + TOOLBAR_BMP_FILENAME, TRUE);
 				CopyFile(DefaultConfigPath + ICON_BMP_FILENAME, ConfigPath + ICON_BMP_FILENAME, TRUE);
-#if defined(_COMBO_)
-				CopyFile(DefaultConfigPath + WEB_ICON_BMP_FILENAME, ConfigPath + WEB_ICON_BMP_FILENAME, TRUE);
-#endif
 			}
 			if (!IsFileExist(ConfigPath + UI_FILENAME))
 			{
@@ -138,27 +125,9 @@ BOOL CApp::InitInstance()
 		ConfigPath = DefaultConfigPath;
 	}
 
-#if defined (_COMBO_)
-	//IShellUIHandle
-	CCustomOccManager *pMgr = new CCustomOccManager;
-
-	// Create an IDispatch class for extending the Dynamic HTML Object Model
-//	m_pDispOM = new CImpIDispatch;
-	//Drop target
-//	m_pDropTarget = new CImpIDropTarget;
-
-	// Set our control containment up but using our control container
-	// management class instead of MFC's default
-	AfxEnableControlContainer(pMgr);
-#endif
 
 	AppConfig.Load(ConfigPath + CONFIG_FILENAME);
 
-#if defined(_COMBO_)
-	// Lite version calls this function before showing popup menu to reduce startup time.
-	// Combo version loads all search plugins here for search bar.
-	SearchPluginCollection.LoadAll();
-#endif
 
 	CMainFrame* pFrame = new CMainFrame;
 	m_pMainWnd = pFrame;
@@ -274,11 +243,7 @@ void CAboutDlg::OnHelp()
 
 void CAboutDlg::OpenUrl(const TCHAR *url)
 {
-#ifdef	_COMBO_
-	((CMainFrame*)AfxGetApp()->m_pMainWnd)->view.ConnectWeb(CAddress(url), TRUE);
-#else
 	ShellExecute(m_hWnd, "open", url, NULL, NULL, SW_SHOW);
-#endif
 }
 
 int CApp::ExitInstance()

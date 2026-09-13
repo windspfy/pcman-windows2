@@ -30,11 +30,7 @@ CFavMenu::~CFavMenu()
 
 inline BOOL CFavMenu::AppendMenu(HMENU hMenu, UINT uFlags, UINT uIDNewItem, LPCTSTR lpNewItem, int& height)
 {
-#ifdef	_COMBO_
-	if (AppConfig.autowrap_favorite && (height + item_height) > max_height)
-#else
 	if ((height + item_height) > max_height)
-#endif
 	{
 		uFlags |= (MF_OWNERDRAW | MF_MENUBARBREAK);
 		height = 0;
@@ -165,30 +161,11 @@ void CFavMenu::LoadFavorites(HMENU &fav_menu, char type)
 		org_fav = _org_fav;
 
 	CFile file;
-#if defined(_COMBO_)
-	if (file.Open(ConfigPath + (type == 's' ?
-								BBS_FAVORITE_FILENAME : WWW_FAVORITE_FILENAME), CFile::modeRead))
-#else
 	if (file.Open(ConfigPath + BBS_FAVORITE_FILENAME, CFile::modeRead))
-#endif
 	{
 		UINT id;
-#if defined(_COMBO_)
-		CStringArray* data;
-		if (type == 's')
-		{
-			data = &bbs_fav;
-			id = ID_FIRST_BBS_FAVORITE;
-		}
-		else
-		{
-			data = &web_fav;
-			id = ID_FIRST_WEB_FAVORITE;
-		}
-#else
 		CStringArray* data = &bbs_fav;
 		id = ID_FIRST_BBS_FAVORITE;
-#endif
 		data->RemoveAll();
 
 		CArchive ar(&file, CArchive::load);
@@ -278,11 +255,7 @@ void CFavMenu::DrawItem(LPDRAWITEMSTRUCT pds)
 
 	int	topmargin = (rc.Height() - 16) / 2;
 	dc.FillSolidRect(rc, bkcolor);
-#if defined(_COMBO_)
-	int iimg = (str[0] == 'd' ? 3 : (str[0] == 's' ? 4 : (str[0] == 'w' ? 8 : -1)));
-#else
 	int iimg = (str[0] == 'd' ? 3 : (str[0] == 's' ? 4 : -1));
-#endif
 	CMainFrame* mainfrm = (CMainFrame*)AfxGetMainWnd();
 	ImageList_Draw(mainfrm->img_icons, iimg, dc.m_hDC,
 				   rc.left + 2, rc.top + topmargin,
@@ -297,13 +270,8 @@ void CFavMenu::DrawItem(LPDRAWITEMSTRUCT pds)
 
 	dc.SetTextColor(textcolor);
 	rc.right -= 8;
-#if defined(_COMBO_)
-	dc.DrawText(LPCTSTR(str) + 1, (iimg != 4 && iimg != 8) ? str.GetLength() - 1 : str.Find('\t') - 1,
-				rc, DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS | DT_EXPANDTABS);
-#else
 	dc.DrawText(LPCTSTR(str) + 1, (iimg != 4) ? str.GetLength() - 1 : str.Find('\t') - 1,
 				rc, DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS | DT_EXPANDTABS);
-#endif
 	SelectObject(dc.m_hDC, fold);
 	dc.Detach();
 }
@@ -318,11 +286,7 @@ void CFavMenu::MeasureItem(LPMEASUREITEMSTRUCT pms)
 	CString& _str = data.ElementAt(pms->itemData - delta);
 
 	CString str;
-#if defined(_COMBO_)
-	int i = (_str[0] == 's' || _str[0] == 'w') ? _str.Find('\t') : -1;
-#else
 	int i = _str[0] == 's' ? _str.Find('\t') : -1;
-#endif
 
 	str = (i == -1) ? _str.Mid(1) : _str.Mid(1, i);
 	int len = str.GetLength();
@@ -340,14 +304,8 @@ void CFavMenu::MeasureItem(LPMEASUREITEMSTRUCT pms)
 void CFavMenu::SaveFavorites(BOOL bBBS)
 {
 	CFile file;
-#ifdef _COMBO_
-	CStringArray& fav = bBBS ? AppConfig.favorites.bbs_fav : AppConfig.favorites.web_fav;
-	if (file.Open(ConfigPath + (bBBS ? BBS_FAVORITE_FILENAME : WWW_FAVORITE_FILENAME),
-				  CFile::modeWrite | CFile::modeCreate))
-#else
 	CStringArray& fav = AppConfig.favorites.bbs_fav;
 	if (file.Open(ConfigPath + BBS_FAVORITE_FILENAME, CFile::modeWrite | CFile::modeCreate))
-#endif
 	{
 		for (int i = 0;i < fav.GetSize() - 4; i++)
 		{
@@ -372,13 +330,6 @@ inline CStringArray& CFavMenu::GetData(UINT id, int& delta)
 		delta = ID_FIRST_BBS_FAVORITE;
 		return bbs_fav;
 	}
-#ifdef	_COMBO_
-	if (id <= ID_LAST_WEB_FAVORITE)	// web_fav
-	{
-		delta = ID_FIRST_WEB_FAVORITE;
-		return web_fav;
-	}
-#endif
 	delta = ID_FIRST_HISTORY;	// history menu
 	return history;
 }
@@ -394,155 +345,3 @@ int FavItemCompare(const void* item1, const void* item2)
 {
 	return strcmpi(*(CString*)item1, *(CString*)item2);
 }
-
-#if defined( _COMBO_ )
-
-void CFavMenu::AddToIEFav(HMENU fmenu, CString favpath, UINT &id)
-{
-	static short menu_level = 0;
-	menu_level++;
-	favmenus.Add(fmenu);
-
-	CStringArray favs;
-
-	DWORD count = 0;
-	LPSTR pdata = NULL;
-	BYTE* data = NULL;
-
-	favs.SetSize(count, 64);
-
-	CFileFind finder;
-	BOOL found = finder.FindFile(favpath + "\\*.*");
-	while (found)
-	{
-		found = finder.FindNextFile();
-		if (!finder.IsDots() && !finder.IsHidden())
-		{
-			CString title = finder.GetFileTitle();
-			BOOL bdir = finder.IsDirectory();
-
-			CString item;
-			if (finder.IsDirectory())
-			{
-				//取得有"."的資料夾名稱 by NomedEmag 07/06/08
-				title = finder.GetFileName();
-				//
-				item = 'd' + title;
-			}
-			else
-			{
-				item = 'w' + title;
-				item += '\t';
-				CString ads;
-				DWORD retl = GetPrivateProfileString("InternetShortcut", "URL", "",
-													 ads.GetBuffer(2048), 2048 , finder.GetFilePath());
-				ads.ReleaseBuffer();
-				item += ads;
-			}
-
-			favs.Add(item);
-		}
-	}
-	finder.Close();
-
-	if (data)
-		delete []data;
-
-	//利用特殊技巧 qsort，這是依賴 MFC 的內部實做方式，將來可能有變
-	if (AppConfig.autosort_favorite)
-		qsort(favs.GetData(), favs.GetSize(), sizeof(CString), FavItemCompare);
-
-//	long menuh=GetSystemMetrics(SM_CYMENU)*4+64;
-
-//	UINT id = ID_FIRST_WEB_FAVORITE;
-	int menu_height = 0;
-	for (int i = 0; i < favs.GetSize(); ++i)
-	{
-		if (!favs[i].IsEmpty())
-		{
-			web_fav.Add(favs[i]);
-			if ('d' == favs[i][0])
-			{
-				HMENU submenu = CreatePopupMenu();
-				AppendMenu(fmenu, MF_OWNERDRAW | MF_POPUP, (UINT)submenu, LPCTSTR(id), menu_height);
-				++id;
-				AddToIEFav(submenu, (favpath + '\\' + (LPCTSTR(favs[i]) + 1)), id);
-			}
-			else
-			{
-				AppendMenu(fmenu, MF_OWNERDRAW, id, LPCTSTR(id), menu_height);
-				++id;
-			}
-		}
-	}
-	web_fav.Add(sep);
-	++id;
-	::AppendMenu(fmenu, MF_SEPARATOR, 0, 0);
-
-	web_fav.Add(add_to_fav);
-	AppendMenu(fmenu, MF_OWNERDRAW, id/*ID_ADDTOFAVORITE*/, LPCTSTR(id), menu_height);	id++;
-
-	web_fav.Add(open_all);
-	AppendMenu(fmenu, MF_OWNERDRAW, id/*ID_FAVORITE_OPENALL*/, LPCTSTR(id), menu_height);	id++;
-
-	web_fav.Add(org_fav);
-	AppendMenu(fmenu, MF_OWNERDRAW, id/*ID_FAVORITE_EDIT*/, LPCTSTR(id), menu_height);	id++;
-
-	menu_level--;
-
-	if (!menu_level)
-	{
-		web_fav.Add(add_to_home);
-		AppendMenu(fmenu, MF_OWNERDRAW, ID_ADDTOHOME, LPCTSTR(id), menu_height);
-		++id;
-	}
-	else
-	{
-		//  AfxGetEmptyString();
-		web_fav.Add(_T(""));	// afxEmptyString is no-longer in mfc7 and above
-		++id;
-	}
-}
-
-void CFavMenu::LoadIEFav(HMENU &fav_menu)
-{
-//	錯誤，這樣會把其他favorite和history的CFavMenu <-> HMENU對應刪除
-//	favmenus.RemoveAll();
-//	改成下列方式，因為上面已經 DestroyMenu( fav_menu )，所以可以很投機取巧的
-//	利用 IsMenu 來檢查，移除 favmenu 中已經無效的 Handles
-	int i;	//	此 i 在稍後的程式還有使用
-	for (i = favmenus.GetSize() - 1;i >= 0;i--)	//搜尋看是否為CFavMenu
-		if (!IsMenu(reinterpret_cast<HMENU>(favmenus[i])))
-			favmenus.RemoveAt(i);
-	//	刪除特定位置第i個 item 後，其後的array都會往前 shift 1，
-	//	但是不用管他，因為是由後往前檢查，所以i後面的都已經檢查過
-
-	DestroyMenu(fav_menu);
-	web_fav.RemoveAll();
-
-	CString favdir = GetIEFavDir();
-
-	max_height = GetSystemMetrics(SM_CYSCREEN) - 64;
-	item_height = GetSystemMetrics(SM_CYMENU);
-
-	UINT id = ID_FIRST_WEB_FAVORITE;
-	fav_menu = CreatePopupMenu();
-	AddToIEFav(fav_menu, favdir, id);
-}
-
-
-CString CFavMenu::GetIEFavDir()
-{
-	ITEMIDLIST *pidl;
-	SHGetSpecialFolderLocation(NULL, CSIDL_FAVORITES, &pidl);
-	CString favdir;
-	SHGetPathFromIDList(pidl, favdir.GetBuffer(_MAX_PATH));
-	favdir.ReleaseBuffer();
-	IMalloc* pmlc = NULL;
-	SHGetMalloc(&pmlc);
-	pmlc->Free(pidl);
-	pmlc->Release();
-	return favdir;
-}
-#endif
-

@@ -46,11 +46,6 @@ const char BBS_FAVORITE_FILENAME[] = "BBSFavorites";
 const char SESSION_FILENAME[] = "Session";
 const char HISTORY_FILENAME[] = "History";
 
-#if defined(_COMBO_)
-const char WEB_ICON_BMP_FILENAME[] = "WebBar.bmp";
-const char WWW_FAVORITE_FILENAME[] = "WebFavorites";
-const char WWW_ADFILTER_FILENAME[] = "AdFilters";
-#endif
 
 BOOL IsContainAnsiCode(LPCTSTR str);
 CString LoadString(CFile& file);
@@ -65,11 +60,7 @@ public:
 	BOOL QueryPassword(BOOL confirm, LPCTSTR title = NULL);
 	void BackupConfig(CString dir1, CString dir2);
 
-#if defined	(_COMBO_)
-	enum{max_rebar_band_count = 6};
-#else
 	enum{max_rebar_band_count = 4};
-#endif
 
 	CAppConfig();
 
@@ -172,27 +163,6 @@ public:
 	CFavMenu favorites;
 
 //	Web support
-#if defined (_COMBO_)
-	CCustomToolBarInfo webbar_inf;
-	static TBBUTTON webbar_btns[];
-	BYTE ads_open_new;
-	BYTE disable_popup;
-	BYTE searchbar_cleanup;
-	BYTE showwb;
-	BYTE fullscr_showwb;
-	BYTE showsearchbar;
-	BYTE fullscr_showsearchbar;
-	BYTE autosort_favorite;
-	BYTE disable_script_error;
-	BYTE use_ie_fav;
-	BYTE autowrap_favorite;
-	short search_engine;
-
-	CStringArray webpage_filter;
-
-	inline void LoadWebPageFilter();
-	inline void SaveWebPageFilter();
-#endif
 
 	CBBSHyperLink hyper_links;
 //	const static char* personal_files[];
@@ -230,13 +200,8 @@ inline void CAppConfig::Default()
 	pcman_hotkey = 0xc0;	//'`'
 	pcman_hotkey_mod = MOD_ALT;
 
-#ifdef _COMBO_
-	max_history = 600;
-//	max_history_menu=20;
-#else
 	max_history = 40;
 //	max_history_menu=10;
-#endif
 
 //	AnsiEditor Settings
 	ed_cols_per_page = 80;
@@ -308,21 +273,6 @@ inline void CAppConfig::Default()
 
 	hyper_links.Default();
 //	WWW Settings
-#if defined (_COMBO_)
-	showwb = 1;
-	showsearchbar = 1;
-	fullscr_showwb = 1;
-	fullscr_showsearchbar = 1;
-	webbar_inf.LoadDefault();
-	ads_open_new = 0;
-	disable_popup = 1;
-	searchbar_cleanup = 0;
-	autosort_favorite = 1;
-	disable_script_error = 1;
-	use_ie_fav = 1;
-	autowrap_favorite = 1;
-	search_engine = 0;
-#endif
 };
 
 

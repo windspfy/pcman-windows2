@@ -18,10 +18,6 @@ class CFavMenu
 	friend class CMainFrame;
 public:
 	HMENU DoLoadFavorites(CArchive& ar, CStringArray& data, UINT& id, int& menu_height);
-#ifdef	_COMBO_
-	static CString GetIEFavDir();
-	void LoadIEFav(HMENU &fav_menu);
-#endif
 	void SaveFavorites(BOOL bBBS);
 	inline int Lookup(HMENU hm)
 	{
@@ -41,14 +37,8 @@ public:
 
 	CStringArray bbs_fav;
 	CStringArray history;
-#ifdef	_COMBO_
-	CStringArray web_fav;
-#endif
 
 protected:
-#ifdef	_COMBO_
-	void AddToIEFav(HMENU fmenu, CString favpath, UINT &id);
-#endif
 	BOOL AppendMenu(HMENU hMenu, UINT uFlags, UINT uIDNewItem, LPCTSTR lpNewItem, int& height);
 
 	CPtrArray favmenus;

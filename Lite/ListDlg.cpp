@@ -21,9 +21,6 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-#ifdef _COMBO_
-#include "../Combo/WebPageDlg.h"
-#endif
 
 #define PATH_SEPARATOR	'\\'
 
@@ -72,9 +69,6 @@ void CListDlg::OnCancel()
 	{
 		SaveSites();
 		view->parent->LoadBBSFavorites();
-#ifdef _COMBO_
-		view->parent->LoadWebFavorites();
-#endif
 	}
 	HTREEITEM item = sites.GetSelectedItem();
 //	if(item != sites.bbsfavorite)
@@ -110,9 +104,6 @@ void CListDlg::OnOK()
 		{
 			SaveSites();
 			view->parent->LoadBBSFavorites();
-#ifdef _COMBO_
-			view->parent->LoadWebFavorites();
-#endif
 		}
 		str.Replace(SEPARATOR, "\t");
 		view->ConnectStr('s' + str, dir);
@@ -192,11 +183,6 @@ void CListDlg::AddSite(CArchive* ar, HTREEITEM parent, char* str)
 				_str += *pstr;
 		}
 
-#if defined(_COMBO_)
-		if (*str == 'w')
-			item = sites.InsertItem(LPCTSTR(_str) + 1, 8, 8, parent);
-		else
-#endif
 			if (*str == 's')
 				item = sites.InsertItem(LPCTSTR(_str) + 1, 4, 4, parent);
 			else if (*str == 'd')
@@ -210,13 +196,6 @@ void CListDlg::AddSite(CArchive* ar, HTREEITEM parent, char* str)
 void CListDlg::LoadSites()
 {
 	CFile data;
-#if defined(_COMBO_)
-	if (!AppConfig.use_ie_fav)
-	{
-		sites.wwwfavorite = sites.InsertItem(LoadString(IDS_WWW_FAVORITE_NAME), 3, 3, TVI_ROOT);
-		LoadSite(sites.wwwfavorite,::ConfigPath + WWW_FAVORITE_FILENAME);
-	}
-#endif
 	sites.bbsfavorite = sites.InsertItem(LoadString(IDS_BBS_FAVORITE_NAME) , 3, 3, TVI_ROOT);
 	LoadSite(sites.bbsfavorite,::ConfigPath + BBS_FAVORITE_FILENAME);
 	sites.Expand(sites.bbsfavorite, TVE_EXPAND);
@@ -248,13 +227,6 @@ void CListDlg::OnDblclkSites(NMHDR* pNMHDR, LRESULT* pResult)
 void CListDlg::SaveSites()
 {
 	CFile file;
-#ifdef _COMBO_
-	if (file.Open(::ConfigPath + WWW_FAVORITE_FILENAME, CFile::modeCreate | CFile::modeWrite))
-	{
-		SaveSite(file, sites.wwwfavorite);
-		file.Close();
-	}
-#endif
 
 	if (file.Open(::ConfigPath + BBS_FAVORITE_FILENAME, CFile::modeCreate | CFile::modeWrite))
 	{
@@ -284,43 +256,10 @@ void CListDlg::OnAddSite()
 	sites.GetItemImage(item, image, image);
 	HTREEITEM newitem;
 
-#ifdef _COMBO_
-	HTREEITEM top = sites.GetTopParent(item);
-	UINT type = 0;
-	if (top == sites.home)
-	{
-		CMenu popup;	popup.LoadMenu(IDR_POPUP2);
-		CRect rc;	GetDlgItem(ID_SITES_NEW)->GetWindowRect(rc);
-		type = popup.GetSubMenu(1)->TrackPopupMenu(TPM_LEFTALIGN | TPM_RETURNCMD, rc.left, rc.bottom, this);
-		// WWW : type = 8
-		// BBS : type = 4
-		if (0 == type)
-			return;
-	}
-	else
-		type = (top == sites.wwwfavorite ? 8 : 4);
-
-	if (image == 3)
-	{
-		CString text = SEPARATOR;
-		if (type == 8)
-			text += "http://";
-		newitem = sites.InsertItem(text, type, type, item);
-	}
-	else
-	{
-		CString text = SEPARATOR;
-		if (type == 8)
-			text += "http://";
-
-		newitem = sites.InsertItem(text, type, type, sites.GetParentItem(item), item);
-	}
-#else
 	if (image == 3)
 		newitem = sites.InsertItem(SEPARATOR, 4, 4, item);
 	else
 		newitem = sites.InsertItem(SEPARATOR, 4, 4, sites.GetParentItem(item), item);
-#endif
 
 	sites.SelectItem(newitem);
 	OnEditSite();
@@ -365,21 +304,6 @@ void CListDlg::OnEditSite()
 			sites.changed = TRUE;
 		}
 	}
-#ifdef _COMBO_
-	else if (image == 8)
-	{
-		CWebPageDlg dlg(this);
-		CString str = sites.GetItemText(item);
-		int pos = str.Find(SEPARATOR);
-		dlg.m_Name = str.Left(pos);
-		dlg.m_URL = str.Mid(pos + SEPARATOR_LEN);
-		if (dlg.DoModal() == IDOK)
-		{
-			sites.changed = TRUE;
-			sites.SetItemText(item, dlg.m_Name + SEPARATOR + dlg.m_URL);
-		}
-	}
-#endif
 	else	//site
 	{
 		CString str = sites.GetItemText(item);
@@ -618,9 +542,6 @@ void CListDlg::UpdateCmdUI()
 	BOOL bdir = sites.IsItemDir(item);
 	BOOL is_in_home = (pitem == sites.home);
 	BOOL is_in_bbsfavorite = (pitem == sites.bbsfavorite);
-#if defined(_COMBO_)
-	BOOL is_in_wwwfavorite = (pitem == sites.bbsfavorite);
-#endif
 	::EnableWindow(::GetDlgItem(m_hWnd, IDC_CONNECT), !bdef && !bdir);
 	::EnableWindow(::GetDlgItem(m_hWnd, ID_SITES_NEWDIR), !is_in_home && (item != sites.home));
 	::EnableWindow(::GetDlgItem(m_hWnd, ID_SITES_ADDFAVORITE), !bdef && !is_in_bbsfavorite);
@@ -658,9 +579,6 @@ void CListDlg::OnRclickSites(NMHDR* pNMHDR, LRESULT* pResult)
 		BOOL bdir = sites.IsItemDir(item);
 		BOOL is_in_home = (pitem == sites.home);
 		BOOL is_in_bbsfavorite = (pitem == sites.bbsfavorite);
-#if defined(_COMBO_)
-		BOOL is_in_wwwfavorite = (pitem == sites.bbsfavorite);
-#endif
 		::EnableMenuItem(mnu.m_hMenu, IDC_CONNECT, MF_BYCOMMAND | (!bdef && !bdir ? MF_ENABLED : MF_GRAYED));
 		::EnableMenuItem(mnu.m_hMenu, ID_SITES_NEWDIR, MF_BYCOMMAND | (!is_in_home && (item != sites.home) ? MF_ENABLED : MF_GRAYED));
 		::EnableMenuItem(mnu.m_hMenu, ID_SITES_ADDFAVORITE, MF_BYCOMMAND | (!bdef && !is_in_bbsfavorite ? MF_ENABLED : MF_GRAYED));

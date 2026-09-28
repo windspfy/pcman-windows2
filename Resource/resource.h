@@ -625,14 +625,24 @@
 #define IDS_CLOSE_ALL_OTHER_PAGES       33041
 #define ID_CONNECT_CLOSE_ALL_OTHERS     33042
 #define IDS_CON_SECURE                  33043
+#define IDS_IDLE_AUTO                   33044
+#define IDS_IDLE_TIMING                 33045
+#define IDS_IDLE_CUSTOM                 33046
+#define IDS_IDLE_AUTO_HINT              33047
+#define IDS_IDLE_TIMING_HINT            33048
+#define IDS_IDLE_CUSTOM_HINT            33049
+#define IDS_IDLE_INTERVAL_ERROR         33050
+#define IDS_IDLE_CUSTOM_HELP            33051
+#define IDC_IDLE_MODE                   1142
+#define IDC_IDLE_HINT                   1143
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        189
-#define _APS_NEXT_COMMAND_VALUE         33041
-#define _APS_NEXT_CONTROL_VALUE         1142
+#define _APS_NEXT_COMMAND_VALUE         33052
+#define _APS_NEXT_CONTROL_VALUE         1144
 #define _APS_NEXT_SYMED_VALUE           154
 #endif
 #endif

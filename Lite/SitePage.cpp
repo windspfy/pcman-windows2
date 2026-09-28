@@ -47,6 +47,8 @@ void CSitePage::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CSitePage, CPropertyPage)
 	//{{AFX_MSG_MAP(CSitePage)
 	ON_BN_CLICKED(IDC_IDLEHELP, OnIdlehelp)
+	ON_BN_CLICKED(IDC_PREVENT_IDLE, OnIdleChanged)
+	ON_CBN_SELCHANGE(IDC_IDLE_MODE, OnIdleChanged)
 	ON_BN_CLICKED(IDC_ADDMAP, OnAddMap)
 	ON_BN_CLICKED(IDC_EDITMAP, OnEditMap)
 	ON_BN_CLICKED(IDC_RENAMEMAP2, OnRenameMap)
@@ -65,6 +67,10 @@ BOOL CSitePage::OnInitDialog()
 	CPropertyPage::OnInitDialog();
 
 	CheckDlgButton(IDC_USE_GLOBAL_SETTINGS	, psettings->use_global);
+	CComboBox* idleMode = (CComboBox*)GetDlgItem(IDC_IDLE_MODE);
+	idleMode->AddString(LoadString(IDS_IDLE_AUTO));
+	idleMode->AddString(LoadString(IDS_IDLE_TIMING));
+	idleMode->AddString(LoadString(IDS_IDLE_CUSTOM));
 
 	WIN32_FIND_DATA fd;
 	HANDLE hf = (HANDLE)FindFirstFile(AppPath + "keyboard\\*.*", &fd);
@@ -104,6 +110,8 @@ BOOL CSitePage::OnInitDialog()
 
 void CSitePage::OnOK()
 {
+	if (!ValidateIdleSettings())
+		return;
 	psettings->use_global			= IsDlgButtonChecked(IDC_USE_GLOBAL_SETTINGS);
 
 	if (psettings->use_global)
@@ -132,7 +140,8 @@ void CSitePage::OnOK()
 	WORD lines_per_page				= GetDlgItemInt(IDC_ONEPAGE_LINE			, NULL, FALSE);
 	psettings->connect_interval		= GetDlgItemInt(IDC_CONNECTINTERVAL		, NULL, FALSE);
 	psettings->reconnect_interval	= GetDlgItemInt(IDC_RECONNECTINTERVAL	, NULL, FALSE);
-	psettings->idle_interval		= GetDlgItemInt(IDC_IDLEINTERVAL			, NULL, FALSE);
+	psettings->idle_interval = KeepAlive::NormalizeInterval(GetDlgItemInt(IDC_IDLEINTERVAL, NULL, FALSE));
+	psettings->idle_mode = KeepAlive::NormalizeMode(((CComboBox*)GetDlgItem(IDC_IDLE_MODE))->GetCurSel());
 	psettings->paste_autowrap_col	= GetDlgItemInt(IDC_PASTE_AUTOWRAP_COL	, NULL, FALSE);
 
 	if (line_count < CTelnetConn::MIN_LINE_COUNT)line_count = CTelnetConn::MIN_LINE_COUNT;
@@ -164,13 +173,61 @@ void CSitePage::OnOK()
 
 void CSitePage::OnIdlehelp()
 {
-	MessageBox(LoadString(IDS_IDLE_HELP));
+	CString help = LoadString(IDS_IDLE_HELP);
+	if (((CComboBox*)GetDlgItem(IDC_IDLE_MODE))->GetCurSel() == KeepAlive::Custom)
+		help += LoadString(IDS_IDLE_CUSTOM_HELP);
+	MessageBox(help);
+}
+
+BOOL CSitePage::OnKillActive()
+{
+	return ValidateIdleSettings() && CPropertyPage::OnKillActive();
+}
+
+bool CSitePage::ValidateIdleSettings()
+{
+	if (show_use_global && IsDlgButtonChecked(IDC_USE_GLOBAL_SETTINGS))
+		return true;
+	if (!IsDlgButtonChecked(IDC_PREVENT_IDLE))
+		return true;
+	CString text;
+	GetDlgItemText(IDC_IDLEINTERVAL, text);
+	unsigned long seconds = 0;
+	if (!KeepAlive::ParseInterval(text, seconds))
+	{
+		MessageBox(LoadString(IDS_IDLE_INTERVAL_ERROR), LoadString(IDS_ERR), MB_OK | MB_ICONWARNING);
+		GetDlgItem(IDC_IDLEINTERVAL)->SetFocus();
+		((CEdit*)GetDlgItem(IDC_IDLEINTERVAL))->SetSel(0, -1);
+		return false;
+	}
+	return true;
+}
+
+void CSitePage::OnIdleChanged()
+{
+	UpdateIdleControls();
+}
+
+void CSitePage::UpdateIdleControls()
+{
+	const bool editable = !show_use_global || !IsDlgButtonChecked(IDC_USE_GLOBAL_SETTINGS);
+	const bool enabled = editable && IsDlgButtonChecked(IDC_PREVENT_IDLE);
+	const int mode = KeepAlive::NormalizeMode(((CComboBox*)GetDlgItem(IDC_IDLE_MODE))->GetCurSel());
+	GetDlgItem(IDC_IDLEINTERVAL)->EnableWindow(enabled);
+	GetDlgItem(IDC_IDLE_MODE)->EnableWindow(enabled);
+	GetDlgItem(IDC_STR)->EnableWindow(enabled && mode != KeepAlive::TimingMark);
+	GetDlgItem(IDC_IDLEHELP)->EnableWindow(TRUE);
+	SetDlgItemText(IDC_IDLE_HINT, LoadString(mode == KeepAlive::Auto ? IDS_IDLE_AUTO_HINT :
+		mode == KeepAlive::TimingMark ? IDS_IDLE_TIMING_HINT : IDS_IDLE_CUSTOM_HINT));
 }
 
 void CSitePage::OnUseGlobalSettings()
 {
 	if (! show_use_global)
+	{
+		UpdateIdleControls();
 		return;
+	}
 
 	psettings->use_global = !psettings->use_global;
 	if (psettings->use_global)
@@ -274,7 +331,10 @@ void CSitePage::OnSelchangeKeyMap()
 void CSitePage::EnableControls(bool enable)
 {
 	if (! show_use_global)
+	{
+		UpdateIdleControls();
 		return;
+	}
 
 	HWND child;
 	for (child = ::GetTopWindow(m_hWnd); child; child = ::GetNextWindow(child, GW_HWNDNEXT))
@@ -282,6 +342,7 @@ void CSitePage::EnableControls(bool enable)
 	if (enable)
 		OnSelchangeKeyMap();
 	::EnableWindow(::GetDlgItem(m_hWnd, IDC_USE_GLOBAL_SETTINGS), TRUE);
+	UpdateIdleControls();
 }
 
 void CSitePage::UpdateDisplay()
@@ -317,6 +378,7 @@ void CSitePage::UpdateDisplay()
 	spin.m_hWnd = NULL;
 
 	SetDlgItemText(IDC_STR , psettings->idle_str);
+	((CComboBox*)GetDlgItem(IDC_IDLE_MODE))->SetCurSel(KeepAlive::NormalizeMode(psettings->idle_mode));
 
 	ctermtype.AddString("ANSI");
 	ctermtype.AddString("VT100");

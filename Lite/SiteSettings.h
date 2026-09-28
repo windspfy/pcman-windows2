@@ -10,6 +10,7 @@
 #endif // _MSC_VER > 1000
 
 #include "stdafx.h"
+#include "KeepAlive.h"
 #include "KeyMap.h"	// Added by ClassView
 #include "TriggerList.h"	// Added by ClassView
 
@@ -27,6 +28,7 @@ public:
 //	pure data section
 	long line_count;
 	DWORD idle_interval;
+	int idle_mode;
 	UINT connect_interval;
 	UINT reconnect_interval;
 	UINT paste_autowrap_col;
@@ -81,6 +83,7 @@ inline void CSiteSettings::Default()
 {
 	line_count = 72;
 	idle_interval = 180;
+	idle_mode = KeepAlive::Auto;
 	connect_interval = 15;
 	reconnect_interval = 5;
 

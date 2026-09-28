@@ -698,11 +698,17 @@ void CTermView::OnTimer(UINT nIDEvent)
 			if (item->is_connected)
 			{
 				item->time++;
-				item->idle_time++;
-				if (!(item->idle_time % item->site_settings.idle_interval) && item->site_settings.prevent_idle)
+				if (KeepAlive::Tick(item->site_settings.prevent_idle != 0,
+					item->site_settings.idle_interval, item->idle_time))
 				{
-					CString idlestr = UnescapeControlChars(item->site_settings.idle_str);
-					item->Send((LPCTSTR)idlestr, idlestr.GetLength());
+					const char* host = item->address.IsValid() ? LPCTSTR(item->address.Server()) : "";
+					if (KeepAlive::UseTimingMark(item->site_settings.idle_mode, host))
+						item->Send(KeepAlive::Request, sizeof(KeepAlive::Request));
+					else
+					{
+						CString idlestr = UnescapeControlChars(item->site_settings.idle_str);
+						item->Send((LPCTSTR)idlestr, idlestr.GetLength());
+					}
 				}
 
 				//Delay Send

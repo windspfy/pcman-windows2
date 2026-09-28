@@ -45,6 +45,7 @@ public:
 	//{{AFX_VIRTUAL(CSitePage)
 public:
 	virtual void OnOK();
+	virtual BOOL OnKillActive();
 protected:
 	//}}AFX_VIRTUAL
 
@@ -52,10 +53,13 @@ protected:
 protected:
 	void UpdateDisplay();
 	void EnableControls(bool enable);
+	void UpdateIdleControls();
+	bool ValidateIdleSettings();
 	// Generated message map functions
 	//{{AFX_MSG(CSitePage)
 	virtual BOOL OnInitDialog();
 	afx_msg void OnIdlehelp();
+	afx_msg void OnIdleChanged();
 	afx_msg void OnAddMap();
 	afx_msg void OnEditMap();
 	afx_msg void OnRenameMap();

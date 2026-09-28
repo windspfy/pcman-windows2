@@ -281,6 +281,10 @@ inline void CTelnetConn::OnIAC()
 {
 	BYTE ret[24];
 	BYTE* pbuf = (BYTE*)ansi_param + 1;
+	// Both responses acknowledge a keep-alive. Never reply DONT or display
+	// these protocol bytes, even when no keep-alive is currently enabled.
+	if (KeepAlive::IsTimingMarkReply(pbuf[0], pbuf[1]))
+		return;
 	switch (*pbuf)
 	{
 	case WILL:

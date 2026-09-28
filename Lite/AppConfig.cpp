@@ -8,6 +8,7 @@
 #include "MainFrm.h"
 #include "PasswdDlg.h"
 #include "StrUtils.h"
+#include "KeepAliveConfig.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -86,6 +87,8 @@ void CAppConfig::Load(LPCTSTR config_path)
 
 
 	lock_pcman = false;
+	site_settings.idle_mode = KeepAlive::NormalizeMode(site_settings.idle_mode);
+	site_settings.idle_interval = KeepAlive::NormalizeInterval(site_settings.idle_interval);
 }
 
 void CAppConfig::Save(LPCTSTR config_path)
@@ -278,9 +281,12 @@ bool CAppConfig::OnDataExchange(bool load)
 	_CFG_BYTE("pitch", font_info.lfPitchAndFamily)
 	END_CFG_SECTION()
 
+	KeepAliveIntervalSetting idleInterval(site_settings.idle_interval);
+	KeepAliveModeSetting idleMode(site_settings.idle_mode);
 	BEGIN_CFG_SECTION(Site)
 	_CFG_LONG("line_count", site_settings.line_count)
-	_CFG_LONG("idle_interval", site_settings.idle_interval)
+	CFG_CUSTOM("idle_interval", idleInterval)
+	CFG_CUSTOM("idle_mode", idleMode)
 	_CFG_INT("connect_interval", site_settings.connect_interval)
 	_CFG_INT("reconnect_interval", site_settings.reconnect_interval)
 	_CFG_INT("paste_autowrap_col", site_settings.paste_autowrap_col)

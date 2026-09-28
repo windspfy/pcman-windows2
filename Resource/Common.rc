@@ -382,90 +382,95 @@ BEGIN
     LTEXT           "背景圖片路徑：",IDC_STATIC,7,83,57,8
 END
 
-IDD_SITE DIALOG DISCARDABLE  0, 0, 277, 257
+IDD_SITE DIALOG DISCARDABLE  0, 0, 277, 317
 STYLE DS_MODALFRAME | WS_CHILD | WS_CAPTION | WS_SYSMENU
 CAPTION "站台選項"
 FONT 9, "新細明體"
 BEGIN
-    CONTROL         "如果閒置",IDC_PREVENT_IDLE,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,12,18,47,10
-    EDITTEXT        IDC_IDLEINTERVAL,59,16,28,14,ES_AUTOHSCROLL | ES_NUMBER
-    LTEXT           "秒後送出下列字串",IDC_STATIC,90,19,65,8
-    EDITTEXT        IDC_STR,158,17,80,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "說明",IDC_IDLEHELP,242,18,24,14
-    CONTROL         "如果在",IDC_AUTORECONNECT,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,12,35,40,10
-    EDITTEXT        IDC_CONNECTINTERVAL,59,34,28,14,ES_AUTOHSCROLL | 
+    CONTROL         "連線保持（防閒置）",IDC_PREVENT_IDLE,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,12,18,100,10
+    LTEXT           "閒置",IDC_STATIC,122,19,20,8
+    EDITTEXT        IDC_IDLEINTERVAL,145,16,38,14,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "秒（建議 180～300）",IDC_STATIC,188,19,78,8
+    LTEXT           "方式：",IDC_STATIC,12,37,26,8
+    COMBOBOX        IDC_IDLE_MODE,40,33,197,65,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "說明",IDC_IDLEHELP,242,33,24,14
+    LTEXT           "字串：",IDC_STATIC,12,56,26,8
+    EDITTEXT        IDC_STR,40,52,226,14,ES_AUTOHSCROLL
+    LTEXT           "",IDC_IDLE_HINT,12,71,254,20
+    CONTROL         "如果在",IDC_AUTORECONNECT,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,12,95,40,10
+    EDITTEXT        IDC_CONNECTINTERVAL,59,94,28,14,ES_AUTOHSCROLL |
                     ES_NUMBER
-    LTEXT           "秒內被斷線自動重連，重連間隔",IDC_STATIC,90,36,113,8
-    EDITTEXT        IDC_RECONNECTINTERVAL,210,34,28,14,ES_AUTOHSCROLL | 
+    LTEXT           "秒內被斷線自動重連，重連間隔",IDC_STATIC,90,96,113,8
+    EDITTEXT        IDC_RECONNECTINTERVAL,210,94,28,14,ES_AUTOHSCROLL |
                     ES_NUMBER
-    LTEXT           "秒",IDC_STATIC,242,36,9,8
+    LTEXT           "秒",IDC_STATIC,242,96,9,8
     CONTROL         "貼上文字太長超過",IDC_PASTE_AUTOWRAP,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,12,52,80,10
-    EDITTEXT        IDC_PASTE_AUTOWRAP_COL,93,50,31,14,ES_AUTOHSCROLL
+                    BS_AUTOCHECKBOX | WS_TABSTOP,12,112,80,10
+    EDITTEXT        IDC_PASTE_AUTOWRAP_COL,93,110,31,14,ES_AUTOHSCROLL
     CONTROL         "Spin1",IDC_SPINAUTOWRAPCOL,"msctls_updown32",
-                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | 
-                    UDS_ARROWKEYS | UDS_NOTHOUSANDS,111,55,11,14
-    LTEXT           "個字元就自動換行 (一個中文字兩字元)",IDC_STATIC,126,53,
+                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY |
+                    UDS_ARROWKEYS | UDS_NOTHOUSANDS,111,115,11,14
+    LTEXT           "個字元就自動換行 (一個中文字兩字元)",IDC_STATIC,126,113,
                     136,8
-    LTEXT           "貼上彩色文字把 ESC 轉換成：",IDC_STATIC,12,70,107,8
-    COMBOBOX        IDC_ESC_CONVERT,120,67,42,42,CBS_DROPDOWN | 
+    LTEXT           "貼上彩色文字把 ESC 轉換成：",IDC_STATIC,12,130,107,8
+    COMBOBOX        IDC_ESC_CONVERT,120,127,42,42,CBS_DROPDOWN |
                     CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "大多數站台用 ^U或^C^H^H",IDC_STATIC,166,69,94,8
-    GROUPBOX        "終端機設定",IDC_STATIC,7,89,264,83
-    LTEXT           "螢幕緩衝區儲存文字行數",IDC_STATIC,14,101,89,8
-    EDITTEXT        IDC_LCOUNT,109,100,37,14,ES_AUTOHSCROLL | ES_NUMBER
-    CONTROL         "Spin1",IDC_SPINLCOUNT,"msctls_updown32",UDS_SETBUDDYINT | 
-                    UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS,140,103,
+    LTEXT           "大多數站台用 ^U或^C^H^H",IDC_STATIC,166,129,94,8
+    GROUPBOX        "終端機設定",IDC_STATIC,7,149,264,83
+    LTEXT           "螢幕緩衝區儲存文字行數",IDC_STATIC,14,161,89,8
+    EDITTEXT        IDC_LCOUNT,109,160,37,14,ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "Spin1",IDC_SPINLCOUNT,"msctls_updown32",UDS_SETBUDDYINT |
+                    UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS,140,163,
                     11,14
     CONTROL         "BBS畫面右方顯示捲軸",IDC_SHOWSCROLL,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,169,101,95,10
-    LTEXT           "行數：",IDC_STATIC,13,121,25,8
-    EDITTEXT        IDC_ONEPAGE_COL,39,117,37,14,ES_AUTOHSCROLL | ES_NUMBER
+                    BS_AUTOCHECKBOX | WS_TABSTOP,169,161,95,10
+    LTEXT           "行數：",IDC_STATIC,13,181,25,8
+    EDITTEXT        IDC_ONEPAGE_COL,39,177,37,14,ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "Spin1",IDC_SPINONEPAGE_COL,"msctls_updown32",
-                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | 
-                    UDS_ARROWKEYS,70,121,11,14
-    EDITTEXT        IDC_ONEPAGE_LINE,109,117,37,14,ES_AUTOHSCROLL | 
+                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY |
+                    UDS_ARROWKEYS,70,181,11,14
+    EDITTEXT        IDC_ONEPAGE_LINE,109,177,37,14,ES_AUTOHSCROLL |
                     ES_NUMBER
     CONTROL         "Spin1",IDC_SPINONEPAGE_LINE,"msctls_updown32",
-                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | 
-                    UDS_ARROWKEYS,140,121,11,14
-    LTEXT           "終端機型態：",IDC_STATIC,156,121,49,8
-    COMBOBOX        IDC_TERMTYPE,207,117,57,42,CBS_DROPDOWN | 
+                    UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY |
+                    UDS_ARROWKEYS,140,181,11,14
+    LTEXT           "終端機型態：",IDC_STATIC,156,181,49,8
+    COMBOBOX        IDC_TERMTYPE,207,177,57,42,CBS_DROPDOWN |
                     CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    LTEXT           "鍵盤按鍵對映：",IDC_STATIC,13,143,57,8
-    COMBOBOX        IDC_KEYMAP,72,139,66,52,CBS_DROPDOWNLIST | 
+    LTEXT           "鍵盤按鍵對映：",IDC_STATIC,13,203,57,8
+    COMBOBOX        IDC_KEYMAP,72,199,66,52,CBS_DROPDOWNLIST |
                     CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "新增鍵盤對映",IDC_ADDMAP,141,139,53,14
-    PUSHBUTTON      "編輯",IDC_EDITMAP,195,139,21,14
-    PUSHBUTTON      "改名",IDC_RENAMEMAP,217,139,21,14
-    PUSHBUTTON      "刪除",IDC_DELMAP,239,139,21,14
+    PUSHBUTTON      "新增鍵盤對映",IDC_ADDMAP,141,199,53,14
+    PUSHBUTTON      "編輯",IDC_EDITMAP,195,199,21,14
+    PUSHBUTTON      "改名",IDC_RENAMEMAP,217,199,21,14
+    PUSHBUTTON      "刪除",IDC_DELMAP,239,199,21,14
     CONTROL         "文字超出畫面自動換行 (UNIX主機需要)",IDC_LINEWRAP,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,157,154,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,217,154,10
     CONTROL         "本地端回應 (MUD需要)",IDC_LOCALECHO,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,169,157,95,10
-    LTEXT           "列數：",IDC_STATIC,83,121,25,8
-    GROUPBOX        "BBS相關功能",IDC_STATIC,7,4,264,82
-    GROUPBOX        "中文內碼自動轉換",IDC_STATIC,7,175,264,30
-    LTEXT           "輸入文字轉碼",IDC_STATIC,143,189,49,8
-    LTEXT           "顯示文字轉碼",IDC_STATIC,11,189,49,8
-    COMBOBOX        IDC_TOCONV,65,186,71,52,CBS_DROPDOWNLIST | 
+                    BS_AUTOCHECKBOX | WS_TABSTOP,169,217,95,10
+    LTEXT           "列數：",IDC_STATIC,83,181,25,8
+    GROUPBOX        "BBS相關功能",IDC_STATIC,7,4,264,142
+    GROUPBOX        "中文內碼自動轉換",IDC_STATIC,7,235,264,30
+    LTEXT           "輸入文字轉碼",IDC_STATIC,143,249,49,8
+    LTEXT           "顯示文字轉碼",IDC_STATIC,11,249,49,8
+    COMBOBOX        IDC_TOCONV,65,246,71,52,CBS_DROPDOWNLIST |
                     CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    COMBOBOX        IDC_TICONV,197,186,71,52,CBS_DROPDOWNLIST | 
+    COMBOBOX        IDC_TICONV,197,246,71,52,CBS_DROPDOWNLIST |
                     CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "滑鼠選取",IDC_AUTOBIG5_MOUSE,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,13,219,48,10
-    CONTROL         "方向鍵",IDC_AUTOBIG5_ARROW,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,80,219,40,10
+    CONTROL         "滑鼠選取",IDC_AUTOBIG5_MOUSE,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,13,279,48,10
+    CONTROL         "方向鍵",IDC_AUTOBIG5_ARROW,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,80,279,40,10
     CONTROL         "Backspace 鍵",IDC_AUTOBIG5_BACKSPACE,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,139,219,59,10
-    CONTROL         "Delete鍵",IDC_AUTOBIG5_DEL,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,217,219,43,10
-    GROUPBOX        "自動偵測中文雙位元組",IDC_STATIC,7,207,264,26
+                    BS_AUTOCHECKBOX | WS_TABSTOP,139,279,59,10
+    CONTROL         "Delete鍵",IDC_AUTOBIG5_DEL,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,217,279,43,10
+    GROUPBOX        "自動偵測中文雙位元組",IDC_STATIC,7,267,264,26
     CONTROL         "使用「PCMan 各項設定」中的全域設定",
-                    IDC_USE_GLOBAL_SETTINGS,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,13,240,256,10
+                    IDC_USE_GLOBAL_SETTINGS,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,13,300,256,10
 END
 
 IDD_STRINGS DIALOG DISCARDABLE  0, 0, 376, 264
@@ -813,7 +818,15 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_BIG52GB             "繁體轉簡體"
-    IDS_IDLE_HELP           "本欄空白，則送出零字元，可用控制字元。\n控制字元使用方式如下：\n可以 ^ 表示 Ctrl，例如 ^M 就等於 Ctrl+M。也可以用 \\x 直接加上\n字元的十六進位碼，\n例如 \\x7f，\\x0a...等 (詳見說明文件)。"
+    IDS_IDLE_HELP           "連線保持可降低路由器或防火牆因閒置而斷線的機率，但不保證永不斷線，也不會自動重連。\n\n自動判斷：PTT／PTT2 網域使用 TIMING-MARK；其他站台使用保留的字串。IP 或自訂別名請自行指定方式。\nTIMING-MARK：由程式送出協定封包，不模擬按鍵，不需要填寫字串。\n自訂字串：可能干擾選單或輸入，PTT 不建議使用；留空不傳送資料。\n\n建議間隔 180～300 秒，可設定 30～86400 秒。正常送出按鍵或其他資料會重置計時；持續閒置時每隔指定秒數傳送一次。"
+    IDS_IDLE_AUTO           "自動判斷（PTT 使用 TIMING-MARK）"
+    IDS_IDLE_TIMING         "TIMING-MARK（PTT 建議）"
+    IDS_IDLE_CUSTOM         "自訂字串（其他站台相容）"
+    IDS_IDLE_AUTO_HINT      "PTT 使用協定封包；其他站台使用上方字串。\n原有字串保留，不會覆寫。"
+    IDS_IDLE_TIMING_HINT    "由程式送出 TIMING-MARK，不模擬按鍵。\n不需填寫字串；請確認站台支援。"
+    IDS_IDLE_CUSTOM_HINT    "注意：自訂字串可能干擾操作，PTT 不建議使用。\n留空不傳送任何資料。"
+    IDS_IDLE_INTERVAL_ERROR "連線保持間隔請輸入 30～86400 的整數秒數，建議 180～300 秒。"
+    IDS_IDLE_CUSTOM_HELP    "\n\n自訂字串語法：^ 表示 Ctrl，例如 ^M 為 Ctrl+M；\\x 加上兩位十六進位數表示位元組，例如 \\x7f。留空不會傳送 NUL。"
     IDS_UNABLE_TO_DEL_KEYMAP "無法刪除，可能此鍵盤對映正在使用中"
     IDS_FREQ_USED_TEXT      "常用文字"
     IDS_HOTKEY              "快速鍵"

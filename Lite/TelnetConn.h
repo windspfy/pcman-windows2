@@ -19,6 +19,8 @@
 #include "TriggerList.h"	// Added by ClassView
 #include "ConnIO.h"
 #include "TcpSocket.h"
+#include "AnsiSequenceParser.h"
+#include "ArticleProgress.h"
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -101,12 +103,12 @@ public:
 
 	char ansi_param[64];	//用來處理ANSI彩色字串的暫存buffer
 	char* pansi_param;		//用來操作ansi_param資料的指標
+	AnsiSequenceParser ansi_parser; // Separate from the Telnet IAC buffer.
 	CPoint old_cursor_pos;	//saved position
 	BYTE saved_attr;		//saved attributes
 	BYTE cur_attr;			//目前的螢幕字元屬性
 	BYTE attr_flags;	//螢幕字元屬性用的暫存flag，儲存是否反相等資訊
 
-BYTE ansi_mode: 1;
 BYTE insert_mode: 1;
 
 BYTE is_getting_article : 1;
@@ -131,6 +133,8 @@ public:
 	void CopyArticle(bool with_color, bool in_editor);
 	CString GetLineWithAnsi(long line);
 	int IsEndOfArticleReached();
+	ArticleProgress::Progress GetArticleProgress();
+	void ContinueCopyArticle();
 	void SendNaws();
 	void SendMacroString(CString str);
 	int GetLineBufLen();

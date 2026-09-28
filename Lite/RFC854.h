@@ -1,3 +1,5 @@
+#pragma once
+
 #define NOP	241
 #define DATA_MARK	242
 #define BREAK	243
@@ -13,6 +15,7 @@
 #define DONT	254
 #define IAC	255
 #define ECHO	1
+#define TIMING_MARK 6
 #define SUPRESS_GO_AHEAD	3
 #define TERMINAL_TYPE	24
 #define	IS	0

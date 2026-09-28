@@ -75,7 +75,6 @@ CTelnetConn::CTelnetConn()
 	cur_attr = 7;
 	attr_flags = 0;
 
-	ansi_mode = 0;
 	pansi_param = ansi_param;
 	insert_mode = 1;
 
@@ -397,45 +396,18 @@ void CTelnetConn::OnText()
 			break;
 		}
 
-		if (ansi_mode)
+		const AnsiSequenceParser::Result parsed = ansi_parser.Feed(*buf);
+		if (parsed == AnsiSequenceParser::Dispatch)
 		{
-			if (*ansi_param != '[')	//如果是ESC ' '類控制碼
-			{
-				if (*buf == 0x1b)
-					buf++;
-				if (buf >= last_byte)
-					return;
-				if (*buf != '[')
-					ansi_mode = 0;
-			}
-			else
-			{
-				if (*buf >= '@' && *buf <= '~')	//如果已經結束ANSI mode
-					ansi_mode = 0;
-
-				if (*buf == 0x0A)
-				{
-					ansi_mode = 0;
-					buf--;
-
-				}
-			}
-
-			if ((pansi_param - ansi_param) < 63)	//檢查是否已經超出ansi_buffer,64th byte是結尾0
-			{
-				*pansi_param = *buf;
-				pansi_param++;
-			}
-
-			if (ansi_mode == 0)	//如果已經結束ANSI mode，開始處理控制碼
-			{
-				*pansi_param = 0;
-				ProcessAnsiEscapeSequence();
-				*ansi_param = 0;	//清空ANSI參數
-				pansi_param = ansi_param;
-			}
-		}	//end if(ansi_mode)
-		else
+			// The parser only dispatches complete, bounded, plain numeric CSI
+			// or single-character ESC commands understood by the legacy handler.
+			memcpy(ansi_param, ansi_parser.Sequence(), ansi_parser.Length() + 1);
+			pansi_param = ansi_param + ansi_parser.Length();
+			ProcessAnsiEscapeSequence();
+			*ansi_param = 0;
+			pansi_param = ansi_param;
+		}
+		else if (parsed == AnsiSequenceParser::Text)
 			switch (*buf)
 			{
 			case 13:	//Carrige Return
@@ -483,9 +455,6 @@ void CTelnetConn::OnText()
 					view->parent->SetForegroundWindow();
 					view->parent->BringWindowToTop();
 				}
-				break;
-			case 0x1b:	//ansi control code
-				ansi_mode = 1;
 				break;
 			case 9:
 				{

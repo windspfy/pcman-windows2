@@ -14,3 +14,5 @@
 *.vcxproj.user
 .vs/
 vcpkg_installed/
+/Lite/Release/PCMan/Config/History
+/Lite/Debug/PCMan/Config/History

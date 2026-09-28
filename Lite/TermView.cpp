@@ -749,8 +749,7 @@ void CTermView::OnTimer(UINT nIDEvent)
 	}
 	else if (nIDEvent == ID_MOVIETIMER && telnet && telnet->is_connected)
 	{
-		CString txt = telnet->screen[telnet->last_line];
-		if (telnet->IsEndOfArticleReached())
+		if (telnet->IsEndOfArticleReached() != ArticleProgress::More)
 			KillTimer(ID_MOVIETIMER);
 		else
 			telnet->SendString(" ");

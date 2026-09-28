@@ -20,6 +20,7 @@
 #include "ConnIO.h"
 #include "TcpSocket.h"
 #include "AnsiSequenceParser.h"
+#include "ArticleProgress.h"
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -132,6 +133,8 @@ public:
 	void CopyArticle(bool with_color, bool in_editor);
 	CString GetLineWithAnsi(long line);
 	int IsEndOfArticleReached();
+	ArticleProgress::Progress GetArticleProgress();
+	void ContinueCopyArticle();
 	void SendNaws();
 	void SendMacroString(CString str);
 	int GetLineBufLen();

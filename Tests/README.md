@@ -52,7 +52,7 @@ Debug 與 Release 分別登入 PTT／PTT2（不要同時執行兩個版本）：
 - 既有滾輪與右鍵功能保持原狀。
 
 正常瀏覽預期與原先相同；不能只因畫面正常，就宣稱所有未知指令均已相容。
-整篇文章複製的既有底列邊界問題不在這次修改範圍內。
+CSI 調整本身不處理文章複製；後續安全修正與測試見下方章節。
 
 ## Keep-Alive 自動測試
 
@@ -122,3 +122,38 @@ MSBuild Tests/KeepAliveTests.vcxproj /t:Rebuild /p:Configuration=Release /p:Plat
 
 回報時請列出：Debug／Release、PTT／PTT2、WSS／Telnet、選擇模式、間隔、
 通過的測試編號，以及異常截圖（遮蔽帳號、私人內容）。
+
+## 文章複製自動測試
+
+```powershell
+MSBuild Tests/ArticleProgressTests.vcxproj /t:Rebuild /p:Configuration=Debug /p:Platform=Win32
+./Tests/bin/Debug/ArticleProgressTests.exe
+MSBuild Tests/ArticleProgressTests.vcxproj /t:Rebuild /p:Configuration=Release /p:Platform=Win32
+./Tests/bin/Release/ArticleProgressTests.exe
+```
+
+測試正式解析 helper，並擷取正式 `GetArticleProgress`、`IsEndOfArticleReached`、
+`CopyArticle`、`ContinueCopyArticle` 方法。UI、網路、ANSI 文字產生及剪貼簿完成端使用替身。
+包括無 NUL 輸入、保護記憶體頁邊界、空白／缺少符號／超大數字／非法百分比、
+Big5／UTF-8 行單位、不完整單位、右側提示、不完整底列逐段更新、重複／異常跳行、
+單頁完成、增加一／兩行、純文字與帶色路徑。不等於實際 MFC、WSS 或剪貼簿驗證。
+
+## 文章複製人工驗收
+
+Debug／Release 分開執行；使用原建置目錄，不需調整防閒置設定。
+請先備份剪貼簿中需要保留的內容。PTT 的 WSS 為主要驗收項目，PTT2／Telnet 有使用再測。
+
+1. 單頁短文章：進入文章、按 Home 回到開頭，執行整篇文章複製，貼到本機記事本。
+   應完成且不多送方向鍵；內容不含底列操作提示。
+2. 多頁文章：從 Home 開始複製，檢查開頭、跨頁交界、最後一行與推文是否有重複或遺漏。
+   下載過程請勿另外按上下鍵／改變視窗尺寸；完成後應停在文章末端。
+3. 帶 ANSI 複製／下載至 ANSI 編輯器：重複短／長文章，檢查文字完整與色彩。
+4. 在看板列表而非文章中執行：應提示無法辨識，不自行翻頁，也不覆寫原剪貼簿。
+5. 在較長文章下載中按取消：應停止後續送鍵、不把部分內容當完成；重新從 Home 複製應可正常進行。
+6. 若連線較慢或遇到不完整底列，應等待而非閃退、狂送按鍵或提早完成；可取消後回到文章畫面重試。
+7. 如有使用「播放動畫」，確認一般文章仍可推進，到末端停止；不在文章畫面時不得持續送鍵。
+
+目前採保守辨識：需有 `(百分比%)` 及 `起始~結束 行`；橫向捲動／其他 BBS 不相容底列
+可能拒絕啟動或等待，請提供底列截圖再評估支援，不要據此宣稱所有 BBS 相容。
+本次未實作 DEC2026 畫面交易同步；不能保證任意新舊內容混合時都能判斷完整畫面。
+若等待超過正常更新時間可直接取消，不需一直等。回報請附組態、站台、連線方式及出問題的底列截圖。

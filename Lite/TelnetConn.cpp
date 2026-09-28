@@ -534,69 +534,7 @@ void CTelnetConn::OnText()
 		view->ShowCaret();
 
 		if (is_getting_article)
-		{
-			//為了相容Firebird BBS
-			//如最後一行還是空白則等待BBS server傳送最後一行
-			char* last_line_txt = screen[ last_line ];
-			while (*last_line_txt == ' ')
-				last_line_txt++;
-
-            char* pos = last_line_txt;
-            while (*pos != '~') ++pos;
-            ++pos;
-            int current_line = atoi(pos);
-
-            if ((int)(last_line_txt - screen[ last_line ]) < (int)strlen(screen[ last_line ]))
-			{
-                int stamp = 1;
-                if (current_download_line == 0)
-                    current_download_line = current_line;
-                else
-				{
-                    stamp = current_line - current_download_line;
-                    current_download_line = current_line;
-                }
-
-                CString tmp;
-                if (get_article_with_ansi)
-				{
-                    if(stamp == 2)
-					{
-                        downloaded_article += GetLineWithAnsi(last_line - 2);
-                        downloaded_article.TrimRight(" ");
-                        downloaded_article += "\r\n";
-                    }
-					downloaded_article += GetLineWithAnsi(last_line - 1);
-                }
-				else
-				{
-                    if(stamp == 2)
-					{
-                        downloaded_article += screen[ last_line - 2 ];
-                        downloaded_article.TrimRight(" ");
-                        downloaded_article += "\r\n";
-                    }
-					downloaded_article += screen[ last_line - 1 ];
-                }
-				downloaded_article.TrimRight(" ");
-				downloaded_article += "\r\n";
-
-				if (IsEndOfArticleReached())
-				{
-					CopyArticleComplete();
-				}
-				else
-				{
-					const char* key = key_map->FindKey(VK_DOWN, 0);
-					SendString(key ? key : "^[[B");
-					if (!download_article_dlg)
-					{
-						download_article_dlg = new CDownloadArticleDlg(this);
-						download_article_dlg->DoModal();
-					}
-				}
-			}
-		}
+			ContinueCopyArticle();
 	}
 }
 
@@ -2043,19 +1981,15 @@ void CTelnetConn::SendNaws()
 
 int CTelnetConn::IsEndOfArticleReached()
 {
-	char* last_line_txt = screen[last_line];
-	char* percent;
-	if ((percent = strchr(last_line_txt, '%'))
-		&& percent > last_line_txt && isdigit(percent[-1]))
-	{
-		char* num = percent;
-		while (num > last_line_txt && isdigit(num[-1]))
-			--num;
-		if (num < percent && atoi(num) < 100)
-			return 0;
-		return 1;
-	}
-	return 2;
+	return GetArticleProgress().state;
+}
+
+ArticleProgress::Progress CTelnetConn::GetArticleProgress()
+{
+	if (!screen || last_line < 0 || last_line >= site_settings.line_count ||
+		site_settings.cols_per_page <= 0)
+		return ArticleProgress::Progress();
+	return ArticleProgress::Parse(screen[last_line], site_settings.cols_per_page);
 }
 
 CString CTelnetConn::GetLineWithAnsi(long line)
@@ -2167,8 +2101,16 @@ CString AttrToStr(BYTE prevatb, BYTE attr)
 
 void CTelnetConn::CopyArticle(bool with_color, bool in_editor)
 {
-//	downloaded_article.Empty();
-    current_download_line = 0;
+	if (is_getting_article || download_article_dlg) return;
+	const ArticleProgress::Progress progress = GetArticleProgress();
+	if (progress.state == ArticleProgress::Unavailable || scroll_pos < 0 ||
+		scroll_pos >= last_line || progress.last - progress.first >= last_line - scroll_pos)
+	{
+		AfxMessageBox("無法辨識文章底列進度，請回到文章畫面並等待畫面完整後再試。", MB_OK | MB_ICONINFORMATION);
+		return;
+	}
+	downloaded_article.Empty();
+	current_download_line = progress.last;
 	get_article_in_editor = in_editor;
 	get_article_with_ansi = with_color;
 	for (int y = scroll_pos; y < last_line; ++y)
@@ -2181,11 +2123,36 @@ void CTelnetConn::CopyArticle(bool with_color, bool in_editor)
 		downloaded_article += "\r\n";
 	}
 
-	if (IsEndOfArticleReached())
+	if (progress.state == ArticleProgress::Complete)
 		CopyArticleComplete();
 	else
 	{
 		is_getting_article = true;
+		const char* key = key_map->FindKey(VK_DOWN, 0);
+		SendString(key ? key : "^[[B");
+		// A partial/unsupported footer must still leave a way to cancel.
+		download_article_dlg = new CDownloadArticleDlg(this);
+		download_article_dlg->DoModal();
+	}
+}
+
+void CTelnetConn::ContinueCopyArticle()
+{
+	const ArticleProgress::Progress progress = GetArticleProgress();
+	const int count = ArticleProgress::NewLines(progress, current_download_line,
+		last_line - first_line);
+	if (!count) return; // Wait for a valid, advanced footer; never blindly send Down.
+	current_download_line = progress.last;
+	for (int y = last_line - count; y < last_line; ++y)
+	{
+		downloaded_article += get_article_with_ansi ? GetLineWithAnsi(y) : CString(screen[y]);
+		downloaded_article.TrimRight(" ");
+		downloaded_article += "\r\n";
+	}
+	if (progress.state == ArticleProgress::Complete)
+		CopyArticleComplete();
+	else
+	{
 		const char* key = key_map->FindKey(VK_DOWN, 0);
 		SendString(key ? key : "^[[B");
 	}

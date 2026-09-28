@@ -535,6 +535,7 @@
     <ClInclude Include="InstantTranDlg.h" />
     <ClInclude Include="KeyMap.h" />
     <ClInclude Include="KeepAlive.h" />
+    <ClInclude Include="ArticleProgress.h" />
     <ClInclude Include="KeepAliveConfig.h" />
     <ClInclude Include="KeyMapDlg.h" />
     <ClInclude Include="ListDlg.h" />

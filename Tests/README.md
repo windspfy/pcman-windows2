@@ -1,5 +1,8 @@
 # CSI 解析測試
 
+PTT 新介面（主選單、列表、空結果、看板資訊及自訂觸發器）的程式碼檢查與人工驗收，
+見 [新介面回歸驗證](../Docs/PTT-Interface-Regression.md)。此項不由工具自動登入操作。
+
 本次僅補強 7-bit `ESC [`（CSI）解析，保留現有基本指令處理。
 DEC2026、SGR Mouse 仍忽略；CPR 仍由既有空函式處理，不回覆。
 這不是完整的 ECMA-48 終端機實作，OSC／DCS 字串協定未納入本次範圍。
@@ -137,6 +140,10 @@ MSBuild Tests/ArticleProgressTests.vcxproj /t:Rebuild /p:Configuration=Release /
 包括無 NUL 輸入、保護記憶體頁邊界、空白／缺少符號／超大數字／非法百分比、
 Big5／UTF-8 行單位、不完整單位、右側提示、不完整底列逐段更新、重複／異常跳行、
 單頁完成、增加一／兩行、純文字與帶色路徑。不等於實際 MFC、WSS 或剪貼簿驗證。
+
+新增 `InterfaceRegression`：以公告格式合成新舊列表標籤、中文閱讀進度及動態提示，
+檢查 Big5／UTF-8 位元組、80／120 位元組邊界及可見底列之外的干擾資料。
+不是實際站台畫面錄製，也不驗證終端機 UTF-8 顯示欄寬、鍵鼠操作或觸發器。
 
 ## 文章複製人工驗收
 

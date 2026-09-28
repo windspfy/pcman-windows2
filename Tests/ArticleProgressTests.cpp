@@ -60,9 +60,63 @@ static std::string Footer(int percent, int first, int last)
     return "page (" + std::to_string(percent) + "%) range " + std::to_string(first) +
         "~" + std::to_string(last) + " \xa6\xe6 (X/%) help";
 }
+
+static std::string Encode(const std::wstring& text, UINT codePage)
+{
+    const int length = WideCharToMultiByte(codePage, 0, text.data(),
+        static_cast<int>(text.size()), nullptr, 0, nullptr, nullptr);
+    Check(length > 0, "regression fixture encoding size");
+    std::string bytes(length, '\0');
+    Check(WideCharToMultiByte(codePage, 0, text.data(), static_cast<int>(text.size()),
+        &bytes[0], length, nullptr, nullptr) == length, "regression fixture encoding");
+    return bytes;
+}
+
+// Synthetic examples based on the two UI announcements, not captured sessions.
+static void InterfaceRegression()
+{
+    using namespace ArticleProgress;
+    for (UINT codePage : { 950u, static_cast<UINT>(CP_UTF8) })
+    {
+        for (const wchar_t* caption : { L"  選擇看板  ", L" 看板列表 ", L" 我的最愛 ",
+            L" 分類看板 ", L" 文章選讀 ", L" 文章列表 ", L" 系列文章 ", L" 文摘列表 ",
+            L" 鴻雁往返 ", L" 信件列表 ", L" 【功能鍵】 ", L" 精華列表 ", L" 精華管理 ",
+            L" 標記項目 ", L" 主功能表 ", L" 看板設定與管理 - Test " })
+        {
+            const std::string row = Encode(std::wstring(caption) + L" (←)離開 (h)說明", codePage);
+            Check(Parse(row.data(), row.size()).state == Unavailable,
+                "old/new non-article captions cannot complete article copy");
+        }
+        for (const wchar_t* hint : { L"", L" (h)說明(→)離開 ", L" (h)說明 (←/q)離開 ",
+            L" (←)離開 (h)說明", L" (y)回應 (X)推文 (←)離開 (h)說明" })
+        {
+            for (int percent : { 0, 50, 100 })
+            {
+                const std::wstring footer = L"  瀏覽 第 1/2 頁 (" + std::to_wstring(percent) +
+                    L"%)  目前顯示: 第 01~03 行";
+                const auto row = Encode(footer + hint, codePage);
+                for (std::size_t width : { 80u, 120u })
+                {
+                    std::string padded = row;
+                    padded.resize(width, ' ');
+                    const auto progress = Parse(padded.data(), width);
+                    Check(progress.state == (percent == 100 ? Complete : More) &&
+                        progress.first == 1 && progress.last == 3,
+                        "progress independent of old/new/hidden hints and row width");
+                }
+            }
+        }
+        const auto row = Encode(L" 文章列表  (h)說明", codePage);
+        const auto body = Encode(L"  瀏覽 第 1/1 頁 (100%)  目前顯示: 第 01~03 行", codePage);
+        const auto adjacent = row + body;
+        Check(Parse(adjacent.data(), row.size()).state == Unavailable,
+            "article-looking adjacent data cannot turn a list footer into progress");
+    }
+}
 int main()
 {
     using namespace ArticleProgress;
+    InterfaceRegression();
     const std::string valid = Footer(50, 1, 3);
     for (const char* bad : { "", "    ", "100%", "(101%) 1~3 \xa6\xe6", "(-1%) 1~3 \xa6\xe6",
         "(50%) 0~3 \xa6\xe6", "(50%) 4~3 \xa6\xe6", "(50%) 1~ \xa6\xe6",

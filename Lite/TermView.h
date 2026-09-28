@@ -228,6 +228,7 @@ protected:
 
 private:
 	static const int kCaretHeight;
+	CStringW DecodeText(const CString& text);
 
 	inline void CreateCaret()
 	{

@@ -2873,6 +2873,29 @@ CString CTermView::GetSelText()
 	return ret;
 }
 
+CStringW CTermView::DecodeText(const CString& text)
+{
+	CStringW unicode;
+	const int sourceLength = text.GetLength();
+	if (sourceLength == 0)
+		return unicode;
+
+	wchar_t* buffer = unicode.GetBuffer(sourceLength);
+	int unicodeLength = 0;
+	if (GetCodePage() == 950)
+	{
+		unicodeLength = static_cast<int>(g_ucs2conv.Big52Ucs2(
+			static_cast<LPCSTR>(text), buffer, sourceLength));
+	}
+	else
+	{
+		unicodeLength = ::MultiByteToWideChar(GetCodePage(), 0,
+			static_cast<LPCSTR>(text), sourceLength, buffer, sourceLength);
+	}
+	unicode.ReleaseBuffer(unicodeLength);
+	return unicode;
+}
+
 LRESULT CTermView::WindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
 	if (AppConfig.lock_pcman &&
@@ -3184,27 +3207,9 @@ void CTermView::CopySelText()
 	{
 		if (IsWinNT())
 		{
-			UINT cp_id = GetCodePage();
-			int len = seltext.GetLength() + 1 ;
-			wchar_t* pwbuf = new wchar_t[len];
-			memset(pwbuf, 0, len * sizeof(wchar_t));
-
-			if (cp_id == 950)
-			{
-				g_ucs2conv.Big52Ucs2((const char*)seltext , pwbuf);
-				CClipboard::SetTextW(m_hWnd, pwbuf);
-				paste_block = telnet->sel_block;
-			}
-			else
-			{
-				::MultiByteToWideChar(cp_id, 0, seltext,
-									  len, pwbuf, len);
-
-				CClipboard::SetTextW(m_hWnd, pwbuf);
-				paste_block = telnet->sel_block;
-			}
-			if (pwbuf)
-				delete [] pwbuf;
+			CStringW unicode = DecodeText(seltext);
+			CClipboard::SetTextW(m_hWnd, unicode);
+			paste_block = telnet->sel_block;
 		}
 		// !WinNT
 		else
@@ -3224,7 +3229,7 @@ void CTermView::CopySelText()
 void CTermView::OnSearchPlugin(UINT id)
 {
 	id -= CSearchPluginCollection::ID_SEARCHPLUGIN00;
-	AppConfig.hyper_links.OpenURL(SearchPluginCollection.UrlForSearch(id, GetSelText()));
+	AppConfig.hyper_links.OpenURL(SearchPluginCollection.UrlForSearch(id, DecodeText(GetSelText())));
 }
 
 void CTermView::OnTranslation()

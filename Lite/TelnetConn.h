@@ -21,6 +21,7 @@
 #include "TcpSocket.h"
 #include "AnsiSequenceParser.h"
 #include "ArticleProgress.h"
+#include "SynchronizedOutput.h"
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -104,6 +105,12 @@ public:
 	char ansi_param[64];	//用來處理ANSI彩色字串的暫存buffer
 	char* pansi_param;		//用來操作ansi_param資料的指標
 	AnsiSequenceParser ansi_parser; // Separate from the Telnet IAC buffer.
+	SynchronizedOutput sync_output;
+	int sync_scroll_pos = 0;
+	void BeginSynchronizedOutput();
+	void EndSynchronizedOutput();
+	void CheckSynchronizedOutputTimeout();
+	void RefreshSynchronizedOutput();
 	CPoint old_cursor_pos;	//saved position
 	BYTE saved_attr;		//saved attributes
 	BYTE cur_attr;			//目前的螢幕字元屬性
@@ -217,6 +224,8 @@ public:
 	void ClearAllFlags()
 	{
 		CConn::ClearAllFlags();
+		sync_output.Reset();
+		ansi_parser = AnsiSequenceParser();
 		is_telnet = true;
 
 		scr_top = 0;

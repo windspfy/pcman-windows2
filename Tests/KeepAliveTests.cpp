@@ -40,6 +40,7 @@ public:
 	std::shared_ptr<FakeTransport> conn_io = std::make_shared<FakeTransport>();
 	std::string text;
 	std::vector<std::string> csi;
+	std::vector<AnsiSequenceParser::Result> syncEvents;
 	AnsiSequenceParser parser;
 	unsigned int naws = 0;
 	void SendNaws() { ++naws; }
@@ -54,6 +55,8 @@ public:
 			const auto result = parser.Feed(*buf);
 			if (result == AnsiSequenceParser::Text) text += static_cast<char>(*buf);
 			if (result == AnsiSequenceParser::Dispatch) csi.emplace_back(parser.Sequence());
+			if (result == AnsiSequenceParser::SyncBegin || result == AnsiSequenceParser::SyncEnd)
+				syncEvents.push_back(result);
 			++buf;
 		}
 	}
@@ -178,6 +181,17 @@ int main()
 	b.Feed("B");
 	a.Feed(Bytes({ TIMING_MARK }) + "A");
 	Check(a.text == "A" && b.text == "B", "per-connection state");
+	const std::string synchronized = std::string("\x1b[?20") + Bytes({ IAC, WONT, TIMING_MARK }) +
+		"26hNEW\x1b[?2026l";
+	for (size_t split = 0; split <= synchronized.size(); ++split)
+	{
+		CTelnetConn conn;
+		conn.Feed(synchronized.substr(0, split));
+		conn.Feed(synchronized.substr(split));
+		Check(conn.syncEvents == std::vector<AnsiSequenceParser::Result>{
+			AnsiSequenceParser::SyncBegin, AnsiSequenceParser::SyncEnd }, "IAC inside split DEC2026");
+		Check(conn.text == "NEW" && conn.conn_io->sent.empty(), "sync and keepalive do not leak or reply");
+	}
 	std::printf("PASS: %u KeepAlive checks (real receive/negotiation/send methods)\n", checks);
 	return 0;
 }

@@ -6,8 +6,8 @@
 class AnsiSequenceParser
 {
 public:
-	enum Result { Text, Consumed, Dispatch };
-	AnsiSequenceParser() : state(Ground), length(0), supported(true), number(0)
+	enum Result { Text, Consumed, Dispatch, SyncBegin, SyncEnd };
+	AnsiSequenceParser() : state(Ground), length(0), supported(true), number(0), overflow(false)
 	{
 		sequence[0] = 0;
 	}
@@ -20,6 +20,7 @@ public:
 			length = 0;
 			supported = true;
 			number = 0;
+			overflow = false;
 			return Consumed;
 		}
 		if (byte == 0x18 || byte == 0x1a) // CAN / SUB cancel a sequence.
@@ -93,19 +94,32 @@ private:
 	unsigned int length;
 	bool supported;
 	unsigned int number;
+	bool overflow;
 
 	void Append(unsigned char byte)
 	{
 		if (length < sizeof(sequence) - 1)
 			sequence[length++] = static_cast<char>(byte);
 		else
+		{
 			supported = false;
+			overflow = true;
+		}
 	}
 
 	Result Finish()
 	{
 		state = Ground;
 		sequence[length] = 0;
+		// Recognize ONLY this private mode, never forward private parameters
+		// to the legacy numeric dispatcher. Overlong prefixes cannot qualify.
+		if (!overflow && length == 7 && sequence[0] == '[' &&
+			sequence[1] == '?' && sequence[2] == '2' && sequence[3] == '0' &&
+			sequence[4] == '2' && sequence[5] == '6')
+		{
+			if (sequence[6] == 'h') return SyncBegin;
+			if (sequence[6] == 'l') return SyncEnd;
+		}
 		if (!supported)
 			return Consumed;
 		// Only the existing command family reaches the legacy dispatcher.

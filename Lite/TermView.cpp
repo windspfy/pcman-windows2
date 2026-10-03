@@ -695,6 +695,7 @@ void CTermView::OnTimer(UINT nIDEvent)
 		for (; pitem < plast_item ; pitem++)
 		{
 			CTelnetConn* item = *pitem;
+			item->CheckSynchronizedOutputTimeout();
 			if (item->is_connected)
 			{
 				item->time++;
@@ -749,6 +750,7 @@ void CTermView::OnTimer(UINT nIDEvent)
 	}
 	else if (nIDEvent == ID_MOVIETIMER && telnet && telnet->is_connected)
 	{
+		if (telnet->sync_output.Active()) return;
 		if (telnet->IsEndOfArticleReached() != ArticleProgress::More)
 			KillTimer(ID_MOVIETIMER);
 		else
@@ -1460,7 +1462,7 @@ void CTermView::OnHistory(UINT id)
 
 void CTermView::OnAnsiCopy()
 {
-	if (!telnet)
+	if (!telnet || telnet->sync_output.Active())
 		return;
 
 	CString data = GetSelAnsi();
@@ -1532,6 +1534,7 @@ void CTermView::OnAnsiSaveAs()
 CString CTermView::GetSelAnsi()
 {
 	CString data;
+	if (telnet && telnet->sync_output.Active()) return data;
 	if (telnet->sel_end.x != telnet->sel_start.x || telnet->sel_end.y != telnet->sel_start.y)
 	{
 		UINT tmp;
@@ -2154,10 +2157,13 @@ inline void CTermView::DrawScreen(CDC &dc)
 
 	BYTE* pline_selstart;	//³]¬°³Ì¤j
 	BYTE* pline_selend;	//³]¬°³Ì¤p
-	int last_line = telnet->scroll_pos + telnet->site_settings.lines_per_page;
-	for (int i = telnet->scroll_pos ; i < last_line; i++)
+	const int displayStart = telnet->sync_output.Active() ? telnet->sync_scroll_pos : telnet->scroll_pos;
+	int last_line = displayStart + telnet->site_settings.lines_per_page;
+	for (int i = displayStart ; i < last_line; i++)
 	{
-		LPBYTE atbline = telnet->GetLineAttr(i);	//attribs
+		LPSTR displayLine = telnet->sync_output.Active() ?
+			telnet->sync_output.Row(i - displayStart) : telnet->screen[i];
+		LPBYTE atbline = telnet->GetLineAttr(displayLine);
 		if (i >= selstarty && i <= selendy)	//¦pªG¦b¿ï¨ú°Ï¤º
 		{
 			pline_selstart = (BYTE*)0xffffffff;	//³]¬°³Ì¤j
@@ -2177,12 +2183,12 @@ inline void CTermView::DrawScreen(CDC &dc)
 			pline_selstart = pline_selend = NULL;
 
 		if (AppConfig.old_textout)
-			DrawLineOld(dc, telnet->screen[i], pline_selstart, pline_selend, y);
+			DrawLineOld(dc, displayLine, pline_selstart, pline_selend, y);
 		else
-			DrawLine(dc, telnet->screen[i], pline_selstart, pline_selend, y);
+			DrawLine(dc, displayLine, pline_selstart, pline_selend, y);
 
 		if (AppConfig.link_underline)
-			DrawLink(dc, telnet->screen[i], telnet->GetLineAttr(i), y);
+			DrawLink(dc, displayLine, atbline, y);
 		y += lineh;
 	}
 	SelectObject(dc.m_hDC, fold);
@@ -2345,7 +2351,7 @@ inline void CTermView::DrawLink(CDC &dc, LPSTR line, LPBYTE atbline, int y)
 
 inline void CTermView::DrawBlink()
 {
-	if (!telnet)
+	if (!telnet || telnet->sync_output.Active())
 		return;
 	CClientDC dc(this);
 
@@ -2692,6 +2698,7 @@ char* CTermView::HyperLinkHitTest(CPoint client_point, int& len)	//¥Î¨Ó´ú¸Õµe­±¤
 //x,y¬°²×ºÝ¾÷¦æ¦C®y¼Ð¡A¦Ó¤£¬O·Æ¹«®y¼Ð
 {
 	CRect text_rect = TextRect();
+	if (!telnet || telnet->sync_output.Active()) return nullptr;
 	if (!PtInRect(&text_rect, client_point))
 		return nullptr;
 
@@ -2787,6 +2794,7 @@ void CTermView::OnUpdateBBSList()
 CString CTermView::GetSelText()
 {
 	CString ret;
+	if (telnet && telnet->sync_output.Active()) return ret;
 	if (telnet != nullptr &&
 		(telnet->sel_end.x != telnet->sel_start.x ||
 			telnet->sel_end.y != telnet->sel_start.y))
@@ -3206,6 +3214,7 @@ BOOL CTermView::ExtTextOut(CDC& dc, int x, int y, UINT nOptions, LPCRECT lpRect,
 
 void CTermView::CopySelText()
 {
+	if (telnet && telnet->sync_output.Active()) return;
 	CString seltext = GetSelText();
 
 	if (!seltext.IsEmpty())
@@ -3233,12 +3242,14 @@ void CTermView::CopySelText()
 
 void CTermView::OnSearchPlugin(UINT id)
 {
+	if (telnet && telnet->sync_output.Active()) return;
 	id -= CSearchPluginCollection::ID_SEARCHPLUGIN00;
 	AppConfig.hyper_links.OpenURL(SearchPluginCollection.UrlForSearch(id, DecodeText(GetSelText())));
 }
 
 void CTermView::OnTranslation()
 {
+	if (telnet && telnet->sync_output.Active()) return;
 	AppConfig.hyper_links.OpenURL(SearchPluginCollection.UrlForTranslate(GetSelText()));
 }
 

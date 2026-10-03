@@ -536,6 +536,7 @@
     <ClInclude Include="KeyMap.h" />
     <ClInclude Include="KeepAlive.h" />
     <ClInclude Include="ArticleProgress.h" />
+    <ClInclude Include="SynchronizedOutput.h" />
     <ClInclude Include="KeepAliveConfig.h" />
     <ClInclude Include="KeyMapDlg.h" />
     <ClInclude Include="ListDlg.h" />

@@ -1,4 +1,4 @@
-// TelnetConn.cpp : implementation file
+﻿// TelnetConn.cpp : implementation file
 //
 
 #include <algorithm>
@@ -393,6 +393,7 @@ void CDownloadArticleDlg::PostNcDestroy()
 
 void CTelnetConn::OnText()
 {
+	CheckSynchronizedOutputTimeout();
 	while (buf < last_byte)
 	{
 		if (*buf == IAC)
@@ -402,7 +403,11 @@ void CTelnetConn::OnText()
 		}
 
 		const AnsiSequenceParser::Result parsed = ansi_parser.Feed(*buf);
-		if (parsed == AnsiSequenceParser::Dispatch)
+		if (parsed == AnsiSequenceParser::SyncBegin)
+			BeginSynchronizedOutput();
+		else if (parsed == AnsiSequenceParser::SyncEnd)
+			EndSynchronizedOutput();
+		else if (parsed == AnsiSequenceParser::Dispatch)
 		{
 			// The parser only dispatches complete, bounded, plain numeric CSI
 			// or single-character ESC commands understood by the legacy handler.
@@ -514,10 +519,11 @@ void CTelnetConn::OnText()
 			}
 		buf++;
 	}
+	// Triggers retain their raw receive-data semantics; do not replay buffers.
+	CheckStrTrigger();
+	if (sync_output.Active()) return;
 	UpdateCursorPos();
 	CheckHyperLinks();
-
-	CheckStrTrigger();
 
 //Update Lines
 	if (this == view->telnet)
@@ -541,6 +547,7 @@ void CTelnetConn::OnText()
 
 void CTelnetConn::UpdateCursorPos()
 {
+	if (sync_output.Active()) return;
 	if (this != ((CTermView*)view)->telnet)
 		return;
 	int y;
@@ -561,9 +568,48 @@ void CTelnetConn::UpdateCursorPos()
 	}
 }
 
+void CTelnetConn::BeginSynchronizedOutput()
+{
+	if (is_ansi_editor || sync_output.Active()) return;
+	CheckHyperLinks();
+	if (sync_output.Begin(GetTickCount64(), screen + scroll_pos,
+		site_settings.lines_per_page, GetLineBufLen()))
+	{
+		sync_scroll_pos = scroll_pos;
+		if (view->telnet == this) view->HideCaret();
+	}
+}
+
+void CTelnetConn::RefreshSynchronizedOutput()
+{
+	for (int i = first_line; i <= last_line; ++i) SetUpdateWholeLine(i);
+	if (view->telnet == this)
+	{
+		view->Invalidate(FALSE);
+		UpdateCursorPos();
+	}
+}
+
+void CTelnetConn::EndSynchronizedOutput()
+{
+	if (sync_output.End()) RefreshSynchronizedOutput();
+}
+
+void CTelnetConn::CheckSynchronizedOutputTimeout()
+{
+	if (sync_output.Expire(GetTickCount64()))
+		RefreshSynchronizedOutput(); // Display only; never advance copying.
+}
+
 void CTelnetConn::OnClose()
 {
+	const bool unfinishedFrame = !sync_output.CopyReady();
 	ClearAllFlags();
+	if (unfinishedFrame)
+	{
+		sync_output.Abort(); // Disconnect is not an authoritative frame end.
+		RefreshSynchronizedOutput();
+	}
 	is_disconnected = true;
 
 	Close();
@@ -1589,6 +1635,9 @@ char* CTelnetConn::ResizeLine(int line, int newl)
 
 void CTelnetConn::ReSizeBuffer(long new_line_count, int new_cols_per_page, int new_lines_per_page)
 {
+	// Saved row layout is invalid after a terminal-size change. Keep copying
+	// blocked until a real sync end, even though presentation must resume.
+	if (sync_output.Active()) sync_output.Abort();
 	if (new_line_count > MAX_LINE_COUNT)
 		new_line_count = MAX_LINE_COUNT;
 
@@ -1987,6 +2036,7 @@ int CTelnetConn::IsEndOfArticleReached()
 
 ArticleProgress::Progress CTelnetConn::GetArticleProgress()
 {
+	if (!sync_output.CopyReady()) return ArticleProgress::Progress();
 	if (!screen || last_line < 0 || last_line >= site_settings.line_count ||
 		site_settings.cols_per_page <= 0)
 		return ArticleProgress::Progress();

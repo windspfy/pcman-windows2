@@ -2,7 +2,9 @@ param([Parameter(Mandatory=$true)][string]$OutputPath)
 $ErrorActionPreference = 'Stop'
 # Test the real receive/negotiation/raw-send implementations with a fake
 # transport and text sink. Generated output stays in the ignored build tree.
-$source = [IO.File]::ReadAllText((Join-Path $PSScriptRoot '../Lite/TelnetConn.cpp'), [Text.Encoding]::GetEncoding(950))
+$bytes = [IO.File]::ReadAllBytes((Join-Path $PSScriptRoot '../Lite/TelnetConn.cpp'))
+try { $source = [Text.UTF8Encoding]::new($false, $true).GetString($bytes) }
+catch { $source = [Text.Encoding]::GetEncoding(950).GetString($bytes) }
 $parts = @()
 foreach ($bounds in @(
     @('inline void CTelnetConn::OnIAC()', 'class CDownloadArticleDlg'),

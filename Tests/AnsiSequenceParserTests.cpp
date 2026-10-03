@@ -71,7 +71,7 @@ int main()
 	Expect("\x1b[12;34H\x1b[;H\x1b[H", "", { "[12;34H", "[;H", "[H" }, "positions/defaults");
 	Expect("\x1b" "7\x1b" "8\x1b" "D\x1b" "M\x1b" "E", "",
 		{ "7", "8", "D", "M", "E" }, "legacy ESC commands");
-	Expect("\x1b[?2026hHELLO\x1b[?2026l", "HELLO", {}, "DEC2026 ignored");
+	Expect("\x1b[?2026hHELLO\x1b[?2026l", "HELLO", {}, "DEC2026 never enters legacy dispatcher");
 	for (const char* mode : { "1000", "1002", "1003", "1006" })
 		Expect(std::string("\x1b[?") + mode + "hX\x1b[?" + mode + "l", "X", {}, "mouse ignored");
 	Expect("\x1b[6nOK", "OK", { "[6n" }, "CPR reaches existing no-op handler");

@@ -1,6 +1,8 @@
 param([Parameter(Mandatory=$true)][string]$OutputPath)
 $ErrorActionPreference = 'Stop'
-$source = [IO.File]::ReadAllText((Join-Path $PSScriptRoot '../Lite/TelnetConn.cpp'), [Text.Encoding]::GetEncoding(950))
+$bytes = [IO.File]::ReadAllBytes((Join-Path $PSScriptRoot '../Lite/TelnetConn.cpp'))
+try { $source = [Text.UTF8Encoding]::new($false, $true).GetString($bytes) }
+catch { $source = [Text.Encoding]::GetEncoding(950).GetString($bytes) }
 $parts = @()
 foreach ($bounds in @(
     @('int CTelnetConn::IsEndOfArticleReached()', 'CString CTelnetConn::GetLineWithAnsi'),

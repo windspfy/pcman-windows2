@@ -108,6 +108,7 @@ public:
 
 	inline void ShowCaret()
 	{
+		if (telnet && telnet->sync_output.Active()) return;
 		if (!caret_vis)
 		{
 			::ShowCaret(m_hWnd);

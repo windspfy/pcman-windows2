@@ -4,6 +4,7 @@
 #include <cstring>
 #include <string>
 #include "../Lite/ArticleProgress.h"
+#include "../Lite/SynchronizedOutput.h"
 
 static unsigned int checks = 0;
 static int messages = 0;
@@ -24,6 +25,7 @@ static CDownloadArticleDlg* download_article_dlg = nullptr;
 class CTelnetConn
 {
 public:
+	SynchronizedOutput sync_output;
     struct Settings { int line_count = 4; int cols_per_page = 80; } site_settings;
     struct KeyMap { const char* FindKey(int, int) { return nullptr; } } keys;
     KeyMap* key_map = &keys;
@@ -214,6 +216,28 @@ int main()
     {
         CTelnetConn c; c.Footer(Footer(100, 1, 3)); c.CopyArticle(false, false);
         Check(c.completes == 1 && c.sends == 0, "single page needs no Down");
+    }
+    {
+        CTelnetConn c; c.Footer(Footer(100, 1, 3));
+        c.sync_output.Begin(0, c.rows, 4, 81);
+        c.CopyArticle(false, false);
+        Check(c.completes == 0 && c.sends == 0, "sync blocks initial article capture");
+        c.sync_output.Expire(2000);
+        c.CopyArticle(false, false);
+        Check(c.completes == 0 && c.sends == 0, "timeout is not article completion");
+        c.sync_output.End(); c.CopyArticle(false, false);
+        Check(c.completes == 1, "real sync end permits capture");
+    }
+    {
+        CTelnetConn c; c.Footer(Footer(50, 1, 3)); c.CopyArticle(false, false);
+        c.sync_output.Begin(0, c.rows, 4, 81);
+        c.Footer(Footer(100, 2, 4)); c.ContinueCopyArticle();
+        Check(c.completes == 0 && c.sends == 1 && c.current_download_line == 3,
+            "in-flight sync blocks continuation and additional Down");
+        c.sync_output.Expire(2000); c.ContinueCopyArticle();
+        Check(c.completes == 0 && c.current_download_line == 3, "timeout cannot finish continuation");
+        c.sync_output.End(); c.ContinueCopyArticle();
+        Check(c.completes == 1 && c.sends == 1, "real end completes pending copy once");
     }
     std::printf("PASS: %u article checks (bounded parser and real copy methods)\n", checks);
 }
